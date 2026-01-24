@@ -74,13 +74,8 @@ Opcionais:
 ## 8) Scripts
 - `npm start`: inicia o servidor.
 - `npm run start:prod`: modo production.
-- `npm run migrate:sqlite`: migracao SQLite -> Postgres.
 
-## 9) Migracao SQLite -> Postgres
-1. Defina as credenciais do Postgres no `.env`.
-2. (Opcional) `SQLITE_PATH` com o caminho do SQLite.
 3. (Opcional) `PG_TRUNCATE=1` para limpar antes de migrar.
-4. Execute `node scripts/migrate-sqlite-to-postgres.js`.
 
 ## 10) Principais paginas (front)
 - `dashboard.html`: atalho para funcoes por perfil.

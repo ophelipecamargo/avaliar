@@ -26,14 +26,7 @@ Estrutura
 - `server.js` API, sessao e regras de negocio
 - `db.js` schema Postgres e indices
 - `public/` front-end estatico
-- `views/` paginas EJS (admin)
 - `docs/API.md` documentacao de rotas
-
-Migracao de dados (SQLite -> Postgres)
-1) Ajuste as variaveis do Postgres (`PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`) ou `DATABASE_URL`.
-2) (Opcional) Defina `SQLITE_PATH` com o caminho do arquivo SQLite.
-3) Para limpar o Postgres antes de importar, use `PG_TRUNCATE=1`.
-4) Rode: `node scripts/migrate-sqlite-to-postgres.js`
 
 Notas
 - O seed inicial cria 1 admin, 1 professor e 1 aluno quando o banco esta vazio.
