@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Solicitações de senha</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+
+  <main class="page">
+    <div class="notice">
+      <strong>Solicitações de redefinição</strong><br>
+      Aqui ficam os pedidos enviados pela tela pública.
+    </div>
+
+    <section class="panel">
+      <div class="panel-title">SOLICITAÇÕES</div>
+      <div class="panel-body">
+        <div class="panel-actions one-line" style="gap:10px;">
+          <div class="field" style="min-width:200px;">
+            <label>Status</label>
+            <select id="filtroStatus">
+              <option value="pendente">Pendentes</option>
+              <option value="resolvido">Resolvidos</option>
+              <option value="recusado">Recusados</option>
+              <option value="todos">Todos</option>
+            </select>
+          </div>
+          <button class="btn-sm btn-secondary" id="btnAtualizarSolicitacoes">Atualizar</button>
+          <div id="solicitacoesInfo" style="margin-left:auto;color:#475569;"></div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="tabelaSolicitacoes">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Matrícula</th>
+                <th>Perfil</th>
+                <th>Solicitado em</th>
+                <th>Status</th>
+                <th>Atendido em</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="7">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

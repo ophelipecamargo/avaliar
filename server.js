@@ -4,6 +4,7 @@ const fs = require("fs");
 const multer = require("multer");
 const express = require("express");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 const session = require("express-session");
 const PgSession = require("connect-pg-simple")(session);
 
@@ -91,6 +92,79 @@ function registerFailedAttempt(ip) {
 
 function clearFailedAttempts(ip) {
   loginAttempts.delete(ip);
+}
+
+// Email (SMTP)
+const SMTP_HOST = process.env.SMTP_HOST || "";
+const SMTP_PORT = Number(process.env.SMTP_PORT || 0);
+const SMTP_USER = process.env.SMTP_USER || "";
+const SMTP_PASS = process.env.SMTP_PASS || "";
+const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER || "";
+
+const mailer = (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS)
+  ? nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    })
+  : null;
+
+function gerarSenhaTemporaria() {
+  const n = Math.floor(100000 + Math.random() * 900000);
+  return String(n);
+}
+
+async function sendResetEmail({ to, nome, senhaTemp }) {
+  if (!mailer) return false;
+  const subject = "AvaliaCEEP | Senha redefinida";
+  const saudacao = nome ? `Olá ${nome},` : "Olá,";
+  const text = [
+    saudacao,
+    "",
+    "Recebemos e validamos sua solicitação de redefinição de senha.",
+    `Sua senha temporária é: ${senhaTemp}`,
+    "",
+    "Por segurança, faça login e altere sua senha no primeiro acesso.",
+    "Se você não solicitou esta alteração, entre em contato com nossa equipe.",
+    "",
+    "Equipe AvaliaCEEP"
+  ].join("\n");
+  const html = `
+    <div style="font-family: Arial, Helvetica, sans-serif; color:#0F172A; line-height:1.5;">
+      <p style="margin:0 0 12px;">${saudacao}</p>
+      <p style="margin:0 0 12px;">
+        Recebemos e validamos sua solicitação de redefinição de senha.
+      </p>
+      <p style="margin:0 0 12px;">
+        Sua senha temporária é:
+        <strong style="display:inline-block; padding:2px 6px; background:#EEF2FF; border-radius:6px;">
+          ${senhaTemp}
+        </strong>
+      </p>
+      <p style="margin:0 0 12px;">
+        Por segurança, faça login e altere sua senha no primeiro acesso.
+      </p>
+      <p style="margin:0 0 18px; color:#475569; font-size:13px;">
+        Se você não solicitou esta alteração, entre em contato com nosso time.
+      </p>
+      <div style="margin-top:18px; padding-top:12px; border-top:1px solid #E2E8F0;">
+        <div style="font-size:16px; font-weight:800; color:#0F172A;">
+          Avalia<span style="color:#2563EB;">CEEP</span>
+        </div>
+        <div style="color:#64748B; font-size:12px;">Time AvaliaCEEP</div>
+      </div>
+    </div>
+  `;
+
+  await mailer.sendMail({
+    from: `AvaliaCEEP <${SMTP_FROM || SMTP_USER}>`,
+    to,
+    subject,
+    text,
+    html,
+  });
+  return true;
 }
 
 // Uploads (imagens de questões)
@@ -223,7 +297,7 @@ async function seed() {
   const seedUsers = [
     { m: "0001", n: "Administrador", p: "admin", first: 1 },
     { m: "1001", n: "Prof. Ana", p: "professor", first: 1 },
-    { m: "2001", n: "Aluno João", p: "aluno", first: 0 },
+    { m: "2001", n: "Aluno João", p: "aluno", first: 1 },
   ];
 
   for (const u of seedUsers) {
@@ -271,6 +345,7 @@ app.post("/api/login", async (req, res) => {
       ok: true,
       user: req.session.user,
       primeiroAcesso: u.primeiro_acesso === 1,
+      primeiroAcessoTipo: u.primeiro_acesso || 0,
     });
   });
 });
@@ -291,6 +366,7 @@ app.get("/api/me", async (req, res) => {
     logged: true,
     user: req.session.user,
     primeiroAcesso: row ? row.primeiro_acesso === 1 : false,
+    primeiroAcessoTipo: row ? (row.primeiro_acesso || 0) : 0,
     ano: anoSistema(req),
   });
 });
@@ -349,6 +425,9 @@ app.put("/api/perfil", requireLogin, async (req, res) => {
   const cidade = normalizar(req.body.cidade, 80);
   const endereco = normalizar(req.body.endereco, 160);
   const telefone = normalizar(req.body.telefone, 40);
+  if (!dataNascimento || !email || !telefone || !estado || !cidade || !endereco) {
+    return res.status(400).json({ ok: false, msg: "Preencha todos os campos obrigatórios." });
+  }
 
   await db.prepare(`
     UPDATE users
@@ -381,6 +460,141 @@ app.post("/api/alterar-senha", requireLogin, async (req, res) => {
     req.session.user.matricula
   );
 
+  return res.json({ ok: true });
+});
+
+// Solicitar redefinição de senha (público)
+app.post("/api/password-requests", async (req, res) => {
+  const matricula = String(req.body.matricula || "").trim();
+  const email = String(req.body.email || "").trim();
+  const perfilRaw = String(req.body.perfil || "").trim().toLowerCase();
+  const perfil = (perfilRaw === "admin" || perfilRaw === "professor" || perfilRaw === "aluno") ? perfilRaw : null;
+
+  if (!matricula || !email) {
+    return res.status(400).json({ ok: false, msg: "Informe matrícula e e-mail." });
+  }
+
+  const norm = (v) => String(v || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
+
+  const user = await db.prepare(`
+    SELECT matricula, nome, perfil, email
+    FROM users
+    WHERE matricula = ?
+  `).get(matricula);
+
+  const emailOk = !!user && norm(user.email) === norm(email);
+  const perfilOk = !perfil || (user && String(user.perfil).toLowerCase() === perfil);
+  const autoElegivel = !!user && emailOk && perfilOk;
+  const smtpOk = !!mailer;
+  const temEmail = !!(user && user.email);
+
+  const statusInicial = (autoElegivel && smtpOk && temEmail) ? "resolvido" : "pendente";
+  const perfilGravar = perfil || (user ? String(user.perfil).toLowerCase() : null);
+  const nomeGravar = (user && user.nome) ? user.nome : "N/A";
+
+  const insert = await db.prepare(`
+    INSERT INTO password_reset_requests (nome, matricula, perfil, motivo, status, criado_ip)
+    VALUES (?, ?, ?, ?, ?, ?)
+    RETURNING id
+  `).get(nomeGravar, matricula, perfilGravar, null, statusInicial, ip);
+
+  let autoReset = false;
+  if (autoElegivel && smtpOk && temEmail) {
+    const senhaTemp = gerarSenhaTemporaria();
+    const senhaHash = bcrypt.hashSync(senhaTemp, 10);
+    const primeiroAcesso = 2;
+    await db.prepare("UPDATE users SET senha_hash=?, primeiro_acesso=? WHERE matricula=?")
+      .run(senhaHash, primeiroAcesso, matricula);
+
+    await sendResetEmail({ to: user.email, nome: user.nome, senhaTemp });
+    await db.prepare(`
+      UPDATE password_reset_requests
+      SET atendido_em=NOW(), atendido_por='auto', nota=?
+      WHERE id=?
+    `).run("Auto-validado e resetado.", insert?.id);
+
+    autoReset = true;
+    audit(req, "password_request.auto_reset", { matricula, perfil: user.perfil });
+  } else {
+    const nota = !autoElegivel
+      ? "Dados não conferem com o cadastro (e-mail/perfil)."
+      : (!temEmail ? "Sem email cadastrado." : "SMTP não configurado.");
+    await db.prepare(`
+      UPDATE password_reset_requests
+      SET nota=?
+      WHERE id=?
+    `).run(nota, insert?.id);
+    audit(req, "password_request.create", { matricula, perfil: perfilGravar });
+  }
+
+  if (autoReset) {
+    return res.json({
+      ok: true,
+      msg: "Solicitação confirmada. Enviamos uma senha temporária para o e-mail cadastrado."
+    });
+  }
+
+  return res.json({
+    ok: true,
+    msg: "Solicitação registrada. A equipe irá analisar e responder em breve."
+  });
+});
+
+// Admin: listar solicitações de redefinição
+app.get("/api/admin/password-requests", requireLogin, requireAdmin, async (req, res) => {
+  const status = String(req.query.status || "").trim().toLowerCase();
+  const filtro = (status === "pendente" || status === "resolvido" || status === "recusado") ? status : null;
+
+  const rows = await db.prepare(`
+    SELECT id, nome, matricula, perfil, motivo, status, criado_em, criado_ip, atendido_em, atendido_por, nota
+    FROM password_reset_requests
+    ${filtro ? "WHERE status = ?" : ""}
+    ORDER BY criado_em DESC
+  `).all(...(filtro ? [filtro] : []));
+
+  return res.json({ ok: true, rows: rows || [] });
+});
+
+// Admin: resolver solicitação (resetar senha, concluir ou recusar)
+app.post("/api/admin/password-requests/:id/resolve", requireLogin, requireAdmin, async (req, res) => {
+  const id = Number(req.params.id || 0);
+  const action = String(req.body.action || "resolver").trim().toLowerCase();
+  const nota = String(req.body.nota || "").trim();
+  if (!id) return res.status(400).json({ ok: false, msg: "Solicitação inválida." });
+
+  const reqRow = await db.prepare(`
+    SELECT id, matricula, perfil, status
+    FROM password_reset_requests
+    WHERE id = ?
+  `).get(id);
+
+  if (!reqRow) return res.status(404).json({ ok: false, msg: "Solicitação não encontrada." });
+  if (reqRow.status !== "pendente") {
+    return res.status(409).json({ ok: false, msg: "Solicitação já finalizada." });
+  }
+
+  let novoStatus = "resolvido";
+  if (action === "recusar") novoStatus = "recusado";
+
+  if (action === "reset") {
+    const u = await db.prepare("SELECT perfil FROM users WHERE matricula=?").get(reqRow.matricula);
+    if (!u) return res.status(404).json({ ok: false, msg: "Usuário não encontrado." });
+    const senhaHash = bcrypt.hashSync(reqRow.matricula, 10);
+    const primeiroAcesso = 2;
+    await db.prepare("UPDATE users SET senha_hash=?, primeiro_acesso=? WHERE matricula=?")
+      .run(senhaHash, primeiroAcesso, reqRow.matricula);
+    audit(req, "password_request.reset", { matricula: reqRow.matricula });
+  }
+
+  await db.prepare(`
+    UPDATE password_reset_requests
+    SET status=?, atendido_em=NOW(), atendido_por=?, nota=?
+    WHERE id=?
+  `).run(novoStatus, req.session.user.matricula, nota || null, id);
+
+  audit(req, "password_request.resolve", { id, status: novoStatus, action });
   return res.json({ ok: true });
 });
 
@@ -511,7 +725,7 @@ app.post("/api/admin/importar-alunos", requireLogin, requireAdmin, async (req, r
 
   const insUser = db.prepare(`
     INSERT INTO users (matricula, nome, perfil, senha_hash, primeiro_acesso)
-    VALUES (?, ?, 'aluno', ?, 0)
+    VALUES (?, ?, 'aluno', ?, 1)
     ON CONFLICT(matricula) DO UPDATE SET
       nome=excluded.nome,
       perfil='aluno'
@@ -803,10 +1017,9 @@ app.get("/api/questoes/:id", requireLogin, requireStaff, async (req, res) => {
   res.json({ ok:true, questao: q });
 });
 // Admin: resetar senha (admin reseta senha de qualquer usuário)
-// Regra sugerida:
+// Regra:
 // - senha volta a ser a matrícula
-// - se for admin/professor, marca primeiro_acesso = 1 (obriga trocar no próximo login)
-// - se for aluno, primeiro_acesso = 0 (continua simples)
+// - primeiro_acesso = 1 (obriga trocar no próximo login)
 app.post("/api/admin/reset-senha", requireLogin, requireAdmin, async (req, res) => {
   const matricula = String(req.body.matricula || "").trim();
   if (!matricula) return res.status(400).json({ ok: false, msg: "Informe a matrícula" });
@@ -815,7 +1028,7 @@ app.post("/api/admin/reset-senha", requireLogin, requireAdmin, async (req, res) 
   if (!u) return res.status(404).json({ ok: false, msg: "Usuário não encontrado" });
 
   const senhaHash = bcrypt.hashSync(matricula, 10);
-  const primeiroAcesso = (u.perfil === "admin" || u.perfil === "professor") ? 1 : 0;
+  const primeiroAcesso = 2;
 
   await db.prepare("UPDATE users SET senha_hash=?, primeiro_acesso=? WHERE matricula=?")
     .run(senhaHash, primeiroAcesso, matricula);
@@ -2223,50 +2436,6 @@ app.get("/api/admin/relatorios/ranking", requireLogin, requireAdminOrProfessor, 
   } catch (e) {
     console.error("Ranking (admin/prof) erro:", e);
     res.status(500).json({ ok: false, msg: "Erro interno (ranking)." });
-  }
-});
-
-app.get("/api/admin/relatorios/desempenho-disciplinas", requireLogin, requireAdminOrProfessor, async (req, res) => {
-  try {
-    const ano = Number(req.query.ano || anoSistema(req));
-    const unidade = String(req.query.unidade || "").trim();
-    const serie = String(req.query.serie || "").trim();
-
-    const params = [ano, ano];
-    let where = "WHERE t.status = 'enviado'";
-    if (unidade) {
-      where += " AND s.unidade = ?";
-      params.push(unidade);
-    }
-    if (serie) {
-      where += " AND a.serie LIKE ?";
-      params.push(`${serie}%`);
-    }
-
-    const rows = await db.prepare(`
-      SELECT
-        COALESCE(d.nome, 'Sem disciplina') AS disciplina,
-        SUM(tr.correta) AS acertos,
-        COUNT(tr.questao_id) AS total
-      FROM tentativas t
-      JOIN simulados s
-        ON s.id = t.simulado_id
-       AND s.ano = ?
-      JOIN aluno_ano a
-        ON a.matricula = t.${tentativasAlunoCol()}
-       AND a.ano = ?
-      JOIN tentativa_respostas tr ON tr.tentativa_id = t.id
-      JOIN questoes q ON q.id = tr.questao_id
-      LEFT JOIN disciplinas d ON d.id = q.disciplina_id
-      ${where}
-      GROUP BY COALESCE(d.nome, 'Sem disciplina')
-      ORDER BY disciplina
-    `).all(...params);
-
-    return res.json({ ok: true, rows: rows || [] });
-  } catch (e) {
-    console.error("Erro desempenho disciplinas:", e);
-    return res.status(500).json({ ok: false, msg: "Erro ao carregar desempenho por disciplinas." });
   }
 });
 

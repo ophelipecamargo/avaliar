@@ -134,6 +134,15 @@ async function api(path, { method = "GET", body, headers } = {}) {
 
 // ---------- Sessão (cache local para UI; sessão real é no servidor) ----------
 const SESS_KEY = "avalia_sess"; // sessionStorage
+const PERFIL_OK_KEY = "avalia_perfil_ok";
+
+function getPerfilOk() {
+  return sessionStorage.getItem(PERFIL_OK_KEY) === "1";
+}
+function setPerfilOk(val) {
+  if (val) sessionStorage.setItem(PERFIL_OK_KEY, "1");
+  else sessionStorage.removeItem(PERFIL_OK_KEY);
+}
 function getSessaoCache() {
   try {
     return JSON.parse(sessionStorage.getItem(SESS_KEY) || "null");
@@ -146,6 +155,7 @@ function setSessaoCache(obj) {
 }
 function clearSessaoCache() {
   sessionStorage.removeItem(SESS_KEY);
+  sessionStorage.removeItem(PERFIL_OK_KEY);
 }
 
 // Busca sessão real no servidor e atualiza cache
@@ -170,6 +180,9 @@ function clearSessaoCache() {
     ano: anoSel,
     // primeiroAcesso pode vir do /api/me (recomendado). Se não vier, mantém o que já tinha no cache.
     primeiroAcesso: (me.primeiroAcesso !== undefined) ? !!me.primeiroAcesso : !!cached.primeiroAcesso,
+    primeiroAcessoTipo: (me.primeiroAcessoTipo !== undefined)
+      ? Number(me.primeiroAcessoTipo || 0)
+      : Number(cached.primeiroAcessoTipo || 0),
   };
   setSessaoCache(novo);
   return novo;
@@ -190,7 +203,7 @@ function isProfessor() {
 }
 
 function precisaTrocarSenha(sess) {
-  return (sess?.perfil === "admin" || sess?.perfil === "professor") && sess?.primeiroAcesso === true;
+  return Number(sess?.primeiroAcessoTipo || 0) > 0;
 }
 
 // ---------- Header ----------
@@ -209,6 +222,9 @@ function renderHeader(perfil) {
       links = `
         <a href="${homeLink}">Início</a>
         <a href="usuarios-tipos.html">Usuários</a>
+        <a href="solicitacoes-senha.html" class="nav-link-badge">Solicitações
+          <span class="nav-badge" id="solicitacoesNavCount" style="display:none;">0</span>
+        </a>
         <a href="simulados-criar.html">Simulados</a>
         <a href="resultados.html">Resultados</a>
         <a href="graficos.html">Gráficos</a>
@@ -255,6 +271,10 @@ function renderHeader(perfil) {
     if (perfil === "admin" || perfil === "professor") {
       atualizarLiberacoesBadge();
     }
+    if (perfil === "admin") {
+      atualizarSolicitacoesBadge();
+    }
+    startBadgeRefresh(perfil);
     initAnoSelect(ano);
   }
 
@@ -278,6 +298,42 @@ function renderHeader(perfil) {
       const elNav = document.getElementById("liberacoesNavCount");
       if (elNav) elNav.style.display = "none";
     }
+  }
+
+  async function atualizarSolicitacoesBadge() {
+    try {
+      const r = await api("/api/admin/password-requests?status=pendente");
+      const total = Number((r.rows || []).length);
+      const elCard = document.getElementById("solicitacoesCount");
+      if (elCard) {
+        elCard.textContent = String(total);
+        elCard.style.display = total > 0 ? "inline-flex" : "none";
+      }
+      const elNav = document.getElementById("solicitacoesNavCount");
+      if (elNav) {
+        elNav.textContent = String(total);
+        elNav.style.display = total > 0 ? "inline-flex" : "none";
+      }
+    } catch (_) {
+      const elCard = document.getElementById("solicitacoesCount");
+      if (elCard) elCard.style.display = "none";
+      const elNav = document.getElementById("solicitacoesNavCount");
+      if (elNav) elNav.style.display = "none";
+    }
+  }
+
+  function startBadgeRefresh(perfil) {
+    if (window._avaliaBadgeTimer) {
+      clearInterval(window._avaliaBadgeTimer);
+    }
+    window._avaliaBadgeTimer = setInterval(() => {
+      if (perfil === "admin" || perfil === "professor") {
+        atualizarLiberacoesBadge();
+      }
+      if (perfil === "admin") {
+        atualizarSolicitacoesBadge();
+      }
+    }, 30000);
   }
 
   async function initAnoSelect(anoLabel) {
@@ -325,6 +381,14 @@ function fecharEsqueciSenha() {
 window.abrirEsqueciSenha = abrirEsqueciSenha;
 window.fecharEsqueciSenha = fecharEsqueciSenha;
 
+function toggleAjudaLogin(e) {
+  if (e) e.preventDefault();
+  const pop = $("ajudaLoginPop");
+  if (!pop) return;
+  pop.classList.toggle("show");
+}
+window.toggleAjudaLogin = toggleAjudaLogin;
+
 // ---------- Login ----------
 async function login() {
   const matricula = $("usuario")?.value?.trim();
@@ -348,11 +412,14 @@ async function login() {
       nome: r.user?.nome,
       perfil: r.user?.perfil,
       primeiroAcesso: !!r.primeiroAcesso,
+      primeiroAcessoTipo: Number(r.primeiroAcessoTipo || (r.primeiroAcesso ? 1 : 0)),
     });
+    setPerfilOk(false);
 
     // regra primeiro acesso
     if (precisaTrocarSenha(getSessao())) {
-      window.location.href = "alterar-senha.html";
+      const tipo = Number(getSessao()?.primeiroAcessoTipo || 0);
+      window.location.href = (tipo === 2) ? "alterar-senha.html" : "perfil.html";
       return;
     }
 
@@ -387,18 +454,176 @@ async function logout() {
 }
 window.logout = logout;
 
+// ---------- Solicitar redefinição (público) ----------
+async function initSolicitarSenha() {
+  const form = $("formSolicitarSenha");
+  const msg = $("solicitarMsg");
+  const btn = $("btnSolicitarSenha");
+  const btnHtml = btn ? btn.innerHTML : "";
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (msg) { msg.innerText = ""; msg.style.color = ""; }
+
+    const matricula = $("solicMatricula")?.value?.trim();
+    const email = $("solicEmail")?.value?.trim();
+    const perfil = $("solicPerfil")?.value?.trim();
+
+    if (!matricula || !email) {
+      if (msg) { msg.innerText = "Informe matrícula e e-mail."; msg.style.color = "red"; }
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = 'Verificando... <span class="btn-spinner" aria-hidden="true"></span>';
+    }
+    if (msg) {
+      msg.innerText = "Verificando dados...";
+      msg.style.color = "#334155";
+    }
+    try {
+      const r = await api("/api/password-requests", {
+        method: "POST",
+        body: { matricula, perfil, email }
+      });
+      if (msg) {
+        msg.innerText = r.msg || "Solicitação enviada. Aguarde o atendimento da administração.";
+        msg.style.color = "green";
+      }
+      form.reset();
+    } catch (e) {
+      if (msg) {
+        msg.innerText = e.message || "Erro ao enviar solicitação.";
+        msg.style.color = "red";
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = btnHtml;
+      }
+    }
+  });
+}
+
+// ---------- Admin: solicitações de redefinição ----------
+async function initSolicitacoesSenha() {
+  const s = await ensureSession({ redirect: true });
+  if (!s) return;
+  if (s.perfil !== "admin") {
+    alert("Somente ADMIN pode acessar esta página.");
+    window.location.href = "dashboard.html";
+    return;
+  }
+
+  renderHeader(s.perfil);
+
+  const statusSel = $("filtroStatus");
+  const tbody = document.querySelector("#tabelaSolicitacoes tbody");
+  const info = $("solicitacoesInfo");
+  const btnAtualizar = $("btnAtualizarSolicitacoes");
+
+  async function carregar() {
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="7">Carregando...</td></tr>`;
+    try {
+      const status = String(statusSel?.value || "pendente");
+      const qs = status && status !== "todos" ? `?status=${encodeURIComponent(status)}` : "";
+      const data = await api(`/api/admin/password-requests${qs}`);
+      const rows = data.rows || [];
+
+      if (info) info.textContent = `Total: ${rows.length}`;
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="7">Nenhuma solicitação.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => {
+        const status = escapeHtml(r.status || "");
+        const perfil = escapeHtml(r.perfil || "-");
+        const criado = fmtDataHoraBr(r.criado_em);
+        const atendido = fmtDataHoraBr(r.atendido_em);
+        const btns = (r.status === "pendente")
+          ? `
+              <div class="acoes-cell">
+                <button class="btn-sm" onclick="resolverSolicitacaoSenha(${r.id}, 'reset')">Resetar</button>
+                <button class="btn-sm" onclick="resolverSolicitacaoSenha(${r.id}, 'resolver')">Concluir</button>
+                <button class="btn-sm" onclick="resolverSolicitacaoSenha(${r.id}, 'recusar')">Recusar</button>
+              </div>
+            `
+          : "-";
+
+        return `
+          <tr>
+            <td>${escapeHtml(r.nome || "-")}</td>
+            <td>${escapeHtml(r.matricula || "-")}</td>
+            <td>${perfil}</td>
+            <td>${criado}</td>
+            <td>${status}</td>
+            <td>${atendido}</td>
+            <td>${btns}</td>
+          </tr>
+        `;
+      }).join("");
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="7">${escapeHtml(e.message || "Erro ao carregar")}</td></tr>`;
+    }
+  }
+
+  if (statusSel) statusSel.addEventListener("change", carregar);
+  if (btnAtualizar) btnAtualizar.addEventListener("click", carregar);
+
+  window.resolverSolicitacaoSenha = async (id, action) => {
+    if (!id) return;
+    const titulo = (action === "reset")
+      ? "Resetar senha para a matrícula?"
+      : (action === "recusar") ? "Recusar solicitação?" : "Concluir solicitação?";
+    if (!confirm(titulo)) return;
+
+    const nota = "";
+    try {
+      await api(`/api/admin/password-requests/${id}/resolve`, {
+        method: "POST",
+        body: { action, nota }
+      });
+      await carregar();
+    } catch (e) {
+      alert(e.message || "Erro ao atualizar solicitação.");
+    }
+  };
+
+  await carregar();
+}
+
 // ✅ BLOQUEIO: se admin/prof está em primeiro acesso, só pode ficar na tela alterar-senha.html
 async function bloquearSePrimeiroAcesso() {
   // index não precisa bloquear
   const p = paginaAtual();
-  if (p === PUBLIC_HOME || p === LOGIN_PAGE) return;
+  if (p === PUBLIC_HOME || p === LOGIN_PAGE || p === "solicitar-senha.html") return;
 
   const s = await ensureSession({ redirect: true });
   if (!s) return;
 
+  const primeiroTipo = Number(s.primeiroAcessoTipo || 0);
+  const estaNoPerfil = paginaAtual() === "perfil.html";
   const estaNaTelaTroca = paginaAtual() === "alterar-senha.html";
-  if (precisaTrocarSenha(s) && !estaNaTelaTroca) {
-    window.location.href = "alterar-senha.html";
+  if (!precisaTrocarSenha(s)) return;
+
+  if (primeiroTipo === 2) {
+    if (!estaNaTelaTroca) {
+      window.location.href = "alterar-senha.html";
+    }
+    return;
+  }
+
+  if (!estaNoPerfil && !estaNaTelaTroca) {
+    window.location.href = "perfil.html";
+    return;
+  }
+  if (estaNaTelaTroca && !getPerfilOk()) {
+    window.location.href = "perfil.html";
   }
 }
 
@@ -433,7 +658,9 @@ async function salvarNovaSenha() {
     // Atualiza cache para liberar telas
     const cached = getSessao() || {};
     cached.primeiroAcesso = false;
+    cached.primeiroAcessoTipo = 0;
     setSessaoCache(cached);
+    setPerfilOk(false);
 
     if (msg) { msg.innerText = "Senha alterada com sucesso!"; msg.style.color = "green"; }
     setTimeout(() => window.location.href = "dashboard.html", 350);
@@ -490,7 +717,7 @@ async function initDashboard() {
         <div class="card-title">Cadastrar usuários</div>
         <div class="card-desc">Administração de contas e acessos</div>
       </div>
-      <div class="card card--tone-2" onclick="window.location.href='simulados-criar.html'">
+        <div class="card card--tone-2" onclick="window.location.href='simulados-criar.html'">
         <div class="card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" class="icon">
             <path d="M8 4h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
@@ -500,7 +727,7 @@ async function initDashboard() {
         <div class="card-title">Simulados</div>
         <div class="card-desc">Criar e organizar avaliações</div>
       </div>
-      <div class="card card--tone-3" onclick="window.location.href='resultados.html'">
+        <div class="card card--tone-3" onclick="window.location.href='resultados.html'">
         <div class="card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" class="icon">
             <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
@@ -539,6 +766,18 @@ async function initDashboard() {
           </div>
           <div class="card-title">Perfil</div>
           <div class="card-desc">Atualizar dados pessoais</div>
+        </div>
+        <div class="card card--tone-2" onclick="window.location.href='solicitacoes-senha.html'">
+          <span class="badge-count" id="solicitacoesCount" style="display:none;">0</span>
+          <div class="card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="icon">
+              <path d="M12 3v6" />
+              <path d="M7 13h10" />
+              <path d="M5 10h14v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V10Z" />
+            </svg>
+          </div>
+          <div class="card-title">Recuperar senha</div>
+          <div class="card-desc">Pedidos de redefinição</div>
         </div>
       `;
     } else if (s.perfil === "professor") {
@@ -659,8 +898,16 @@ async function initDashboard() {
     const endereco = $("perfilEndereco");
     const msg = $("perfilMsg");
     const btnSalvar = $("btnSalvarPerfil");
+    const btnTrocarSenha = $("btnTrocarSenhaPerfil");
 
     if (nome) nome.value = sess?.nome || "";
+    if (Number(sess?.primeiroAcessoTipo || 0) === 1 && msg) {
+      msg.textContent = "Primeiro acesso: preencha seu perfil e clique em Salvar para continuar.";
+      msg.style.color = "#1E3A8A";
+    }
+    if (btnTrocarSenha && Number(sess?.primeiroAcessoTipo || 0) === 1 && !getPerfilOk()) {
+      btnTrocarSenha.style.display = "none";
+    }
     if (sess?.perfil === "aluno") {
       if (idadeWrap) idadeWrap.style.display = "block";
     } else if (idadeWrap) {
@@ -700,21 +947,39 @@ async function initDashboard() {
           msg.textContent = "Salvando...";
           msg.style.color = "#1E3A8A";
         }
+        const dataNascimento = String(nascimento?.value || "").trim();
+        const emailVal = String(email?.value || "").trim();
+        const telefoneVal = String(telefone?.value || "").trim();
+        const estadoVal = String(estado?.value || "").trim();
+        const cidadeVal = String(cidade?.value || "").trim();
+        const enderecoVal = String(endereco?.value || "").trim();
+        if (!dataNascimento || !emailVal || !telefoneVal || !estadoVal || !cidadeVal || !enderecoVal) {
+          if (msg) {
+            msg.textContent = "Preencha todos os campos obrigatórios antes de salvar.";
+            msg.style.color = "#B91C1C";
+          }
+          return;
+        }
         try {
           await api("/api/perfil", {
             method: "PUT",
             body: {
-              data_nascimento: nascimento?.value || "",
-              email: email?.value || "",
-              telefone: telefone?.value || "",
-              estado: estado?.value || "",
-              cidade: cidade?.value || "",
-              endereco: endereco?.value || "",
+              data_nascimento: dataNascimento,
+              email: emailVal,
+              telefone: telefoneVal,
+              estado: estadoVal,
+              cidade: cidadeVal,
+              endereco: enderecoVal,
             }
           });
           if (msg) {
             msg.textContent = "Dados atualizados com sucesso.";
             msg.style.color = "#15803D";
+          }
+          if (Number(sess?.primeiroAcessoTipo || 0) === 1) {
+            setPerfilOk(true);
+            if (btnTrocarSenha) btnTrocarSenha.style.display = "";
+            setTimeout(() => window.location.href = "alterar-senha.html", 400);
           }
         } catch (e) {
           if (msg) {
@@ -1492,6 +1757,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (p === "simulados-aluno.html") await initSimuladosAluno();
   if (p === "liberacoes.html") await initLiberacoes();
   if (p === "simulado-realizar.html") await initSimuladoRealizar();
+  if (p === "solicitar-senha.html") await initSolicitarSenha();
+  if (p === "solicitacoes-senha.html") await initSolicitacoesSenha();
   })();
 
   enableMobileTables();
@@ -2942,10 +3209,6 @@ async function initGraficos(){
   const tabBtns = Array.from(document.querySelectorAll(".tab-btn"));
   const tbodyRanking = document.getElementById("tbodyRanking");
   const selUnidade = document.getElementById("fGrafUnidade");
-  const pieCanvas = document.getElementById("graficoPizza");
-  const pieLegenda = document.getElementById("graficoPizzaLegenda");
-    const pieEmpty = document.getElementById("graficoPizzaEmpty");
-    const pieTotal = document.getElementById("graficoPizzaTotal");
   const ano = anoAtual();
   let serieAtual = "";
 
@@ -2988,88 +3251,6 @@ async function initGraficos(){
         </div>
       `;
     }).join("");
-  }
-
-    function renderPizza(rows){
-      if (!pieCanvas || !pieLegenda || !pieEmpty) return;
-      const ctx = pieCanvas.getContext("2d");
-      if (!ctx) return;
-
-      const totalAcertos = rows.reduce((s, r) => s + Number(r.acertos || 0), 0);
-      const totalQuestoes = rows.reduce((s, r) => s + Number(r.total || 0), 0);
-      if (!rows.length || totalAcertos <= 0) {
-        ctx.clearRect(0, 0, pieCanvas.width, pieCanvas.height);
-        pieEmpty.textContent = "Sem dados para exibir.";
-        pieEmpty.style.display = "block";
-        pieLegenda.innerHTML = "";
-        if (pieTotal) {
-          pieTotal.textContent = "";
-          pieTotal.style.display = "none";
-        }
-        return;
-      }
-
-      pieEmpty.style.display = "none";
-      ctx.clearRect(0, 0, pieCanvas.width, pieCanvas.height);
-
-    const cores = [
-      "#1E3A8A",
-      "#0F766E",
-      "#B45309",
-      "#7C3AED",
-      "#BE185D",
-      "#15803D",
-      "#B91C1C",
-      "#0369A1",
-    ];
-
-    const cx = pieCanvas.width / 2;
-    const cy = pieCanvas.height / 2;
-    const r = Math.min(cx, cy) - 4;
-    let start = -Math.PI / 2;
-
-    rows.forEach((item, idx) => {
-      const val = Number(item.acertos || 0);
-      if (val <= 0) return;
-      const slice = (val / totalAcertos) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.arc(cx, cy, r, start, start + slice);
-      ctx.closePath();
-      ctx.fillStyle = cores[idx % cores.length];
-      ctx.fill();
-      start += slice;
-    });
-
-      if (pieTotal) {
-        const pctTotal = totalQuestoes > 0 ? (totalAcertos / totalQuestoes) * 100 : 0;
-        pieTotal.style.display = "flex";
-        pieTotal.innerHTML = `
-          <div class="pie-total-label">Acertos totais</div>
-          <div class="pie-total-value">${escapeHtml(String(totalAcertos))}/${escapeHtml(String(totalQuestoes))}</div>
-          <div class="pie-total-sub">${pctTotal.toFixed(1)}%</div>
-        `;
-      }
-
-      pieLegenda.innerHTML = rows.map((item, idx) => {
-        const val = Number(item.acertos || 0);
-        const total = Number(item.total || 0);
-        const pct = total > 0 ? ((val / total) * 100) : 0;
-        const cor = cores[idx % cores.length];
-        return `
-          <div class="pie-legend-item">
-            <div class="pie-legend-head">
-              <span class="pie-dot" style="background:${cor};"></span>
-              <span class="pie-name">${escapeHtml(item.disciplina || "-")}</span>
-              <span class="pie-value">${pct.toFixed(1)}%</span>
-            </div>
-            <div class="pie-legend-bar">
-              <span style="width:${pct.toFixed(1)}%; background:${cor};"></span>
-            </div>
-            <div class="pie-legend-foot">${pct.toFixed(1)}% de acertos</div>
-          </div>
-        `;
-      }).join("");
   }
 
   async function carregarComparativo(){
@@ -3116,27 +3297,6 @@ async function initGraficos(){
     }
   }
 
-  async function carregarPizza(){
-    if (!pieCanvas || !pieLegenda || !pieEmpty) return;
-    pieEmpty.textContent = "Carregando...";
-    pieEmpty.style.display = "block";
-    pieLegenda.innerHTML = "";
-
-    const unidade = String(selUnidade?.value || "").trim();
-    const qs = new URLSearchParams({ ano: String(ano), serie: serieAtual });
-    if (unidade) qs.set("unidade", unidade);
-
-    try{
-      const r = await api(`/api/admin/relatorios/desempenho-disciplinas?${qs.toString()}`);
-      renderPizza(r.rows || []);
-    }catch(e){
-      if (pieEmpty) {
-        pieEmpty.textContent = e.message || "Erro ao carregar grafico.";
-        pieEmpty.style.display = "block";
-      }
-    }
-  }
-
   async function carregarUnidades(){
     if (!selUnidade) return;
     selUnidade.innerHTML = `<option value="">Carregando...</option>`;
@@ -3153,7 +3313,6 @@ async function initGraficos(){
   selUnidade?.addEventListener("change", async () => {
     await carregarComparativo();
     await carregarRanking();
-    await carregarPizza();
   });
 
   if (tabBtns.length) {
@@ -3163,7 +3322,6 @@ async function initGraficos(){
         setTabAtivo(serieAtual);
         await carregarComparativo();
         await carregarRanking();
-        await carregarPizza();
       });
     });
   }
@@ -3172,7 +3330,6 @@ async function initGraficos(){
   await carregarUnidades();
   await carregarComparativo();
   await carregarRanking();
-  await carregarPizza();
 }
 async function initSimulados(){
   const s = await ensureSession({ redirect:true });
@@ -3795,6 +3952,7 @@ function dataHoraFormat(inicio_em, fim_em){
 
   // ---------- reaplicar (reabrir para não realizados) ----------
   let reapSimId = null;
+  let reapDuracaoMin = 90;
 
   function toInputDateTime(valor) {
     if (!valor) return "";
@@ -3852,11 +4010,8 @@ function dataHoraFormat(inicio_em, fim_em){
               <label>Novo início</label>
               <input id="reapInicio" type="datetime-local" />
             </div>
-            <div class="field">
-              <label>Novo fim</label>
-              <input id="reapFim" type="datetime-local" />
-            </div>
           </div>
+          <div style="opacity:.8;margin-top:6px;">Duração padrão: 90 minutos.</div>
 
           <div class="modal-actions">
             <button class="btn btn-secondary" id="cancelarModalReaplicar" type="button">Cancelar</button>
@@ -3879,10 +4034,9 @@ function dataHoraFormat(inicio_em, fim_em){
 
     document.getElementById("confirmarReaplicar").onclick = async () => {
       const inicio = String(document.getElementById("reapInicio").value || "").trim();
-      const fim = String(document.getElementById("reapFim").value || "").trim();
       if (!reapSimId) return;
-      if (!inicio || !fim) return mostrarErroReaplicar("Informe início e fim.");
-      if (inicio >= fim) return mostrarErroReaplicar("O fim deve ser maior que o início.");
+      if (!inicio) return mostrarErroReaplicar("Informe a data e hora de início.");
+      const fim = addMinutesInput(inicio, Number(reapDuracaoMin || 90));
 
       try {
         await api(`/api/admin/simulados/${reapSimId}/reaplicar`, {
@@ -3912,16 +4066,14 @@ function dataHoraFormat(inicio_em, fim_em){
     if (!sm) return alert("Simulado não encontrado.");
 
     reapSimId = Number(id);
+    reapDuracaoMin = Number(sm.duracao_min || 90);
 
     document.getElementById("reapSimTitulo").innerText = sm.titulo || "-";
     document.getElementById("reapTurmaAtual").innerText = sm.turma || "-";
 
     const inicioPadrao = toInputDateTime(sm.inicio_em) || nowInputDateTime();
-    const dur = Number(sm.duracao_min || 90);
-    const fimPadrao = toInputDateTime(sm.fim_em) || addMinutesInput(inicioPadrao, dur);
 
     document.getElementById("reapInicio").value = inicioPadrao;
-    document.getElementById("reapFim").value = fimPadrao;
 
     document.getElementById("modalBackdropReaplicar").style.display = "flex";
   }

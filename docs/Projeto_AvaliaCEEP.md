@@ -70,12 +70,13 @@ Obrigatorias:
 Opcionais:
 - `PORT` (padrao 3000)
 - `NODE_ENV=production`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+  - Usado para enviar e-mail quando a senha e resetada automaticamente.
+  - Para Gmail, use senha de app e `SMTP_HOST=smtp.gmail.com` com `SMTP_PORT=465`.
 
 ## 8) Scripts
 - `npm start`: inicia o servidor.
 - `npm run start:prod`: modo production.
-
-3. (Opcional) `PG_TRUNCATE=1` para limpar antes de migrar.
 
 ## 10) Principais paginas (front)
 - `dashboard.html`: atalho para funcoes por perfil.
@@ -87,6 +88,8 @@ Opcionais:
 - `liberacoes.html`: liberacoes de tentativas bloqueadas.
 - `perfil.html`: dados pessoais e troca de senha.
 - `login.html`: acesso ao sistema.
+- `solicitar-senha.html`: solicitacao publica de redefinicao.
+- `solicitacoes-senha.html`: painel admin de solicitacoes.
 
 ## 11) API (resumo)
 Detalhe completo em `docs/API.md`. Rotas principais:
@@ -158,7 +161,6 @@ Relatorios (admin/professor)
 - GET `/api/admin/relatorios/simulado/:id`
 - GET `/api/admin/relatorios/comparativo-series`
 - GET `/api/admin/relatorios/ranking`
-- GET `/api/admin/relatorios/desempenho-disciplinas`
 - GET `/api/admin/relatorios/desempenho-disciplina-alunos`
 
 Liberacoes
@@ -181,7 +183,31 @@ Liberacoes
 - Mantenha o PostgreSQL com acesso restrito.
 - Controle de acesso por perfil ja aplicado.
 
-## 14) Registro e protecao (Brasil)
+## 14) Hospedagem local com IP fixo (Windows)
+Objetivo: permitir acesso pelo IP publico do servidor da escola.
+
+Opcao A: HTTP (sem HTTPS)
+- Acesso: `http://SEU_IP:3000`
+- Pratico e rapido, mas nao e seguro para login/senha.
+- Passos basicos:
+  1. Liberar porta `3000` no firewall do Windows e no roteador.
+  2. Fixar o IP externo e apontar o NAT para o servidor.
+  3. Rodar o servidor com `npm start` (ou como servico).
+
+Opcao B: HTTPS com certificado autoassinado (sem dominio)
+- Acesso: `https://SEU_IP` com aviso de seguranca no navegador.
+- Mais seguro no transporte, mas exige aceitar o alerta.
+- Para evitar alerta dentro da escola, instale a CA interna nos computadores.
+- Passos sugeridos (com IIS como proxy):
+  1. Criar certificado autoassinado no Windows.
+  2. Configurar IIS para HTTPS (porta 443) e encaminhar para o Node na porta 3000.
+  3. Liberar porta `443` no firewall e no roteador.
+
+Observacoes:
+- Sem dominio, certificados publicos confiaveis nao funcionam.
+- Para HTTPS sem alerta, e preciso ter um dominio valido e certificado de CA publica.
+
+## 15) Registro e protecao (Brasil)
 Recomendacoes:
 1. Registro de Programa de Computador no INPI (prova de autoria).
 2. Definicao de licenca:
@@ -192,11 +218,11 @@ Recomendacoes:
 
 Obs.: Este texto nao substitui orientacao juridica.
 
-## 15) Manutencao anual (fluxo sugerido)
+## 16) Manutencao anual (fluxo sugerido)
 1. No inicio do ano, selecione o novo ano no header.
 2. Importe alunos do ano novo (sem migrar automaticamente).
 3. Crie simulados do novo ano.
 4. O historico do ano anterior fica consultavel.
 
-## 16) Contato tecnico
+## 17) Contato tecnico
 Equipe AvaliaCEEP.

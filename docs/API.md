@@ -10,6 +10,7 @@ Auth
 - GET `/api/me`
 - POST `/api/logout`
 - POST `/api/alterar-senha` body: `{ nova }`
+- POST `/api/password-requests` body: `{ nome, matricula, email, perfil? }`
 
 Usuarios (admin)
 - GET `/api/admin/users-admin-prof`
@@ -17,6 +18,8 @@ Usuarios (admin)
 - PUT `/api/admin/users-admin-prof/:matricula` body: `{ matricula, nome, perfil }`
 - DELETE `/api/admin/users-admin-prof/:matricula`
 - POST `/api/admin/reset-senha` body: `{ matricula }`
+- GET `/api/admin/password-requests` query: `status=pendente|resolvido|recusado`
+- POST `/api/admin/password-requests/:id/resolve` body: `{ action: "reset|resolver|recusar", nota? }`
 
 Alunos (admin)
 - POST `/api/admin/importar-alunos` body: `{ alunos: [{ matricula, nome, serie }] }`

@@ -49,6 +49,20 @@ async function init() {
       nome TEXT NOT NULL,
       UNIQUE(ano, matricula)
     );
+
+    CREATE TABLE IF NOT EXISTS password_reset_requests (
+      id SERIAL PRIMARY KEY,
+      nome TEXT NOT NULL,
+      matricula TEXT NOT NULL,
+      perfil TEXT,
+      motivo TEXT,
+      status TEXT NOT NULL DEFAULT 'pendente' CHECK(status IN ('pendente','resolvido','recusado')),
+      criado_em TIMESTAMP NOT NULL DEFAULT NOW(),
+      criado_ip TEXT,
+      atendido_em TIMESTAMP,
+      atendido_por TEXT,
+      nota TEXT
+    );
   `);
 
   await pool.query(`
@@ -180,6 +194,8 @@ async function init() {
 
   await pool.query(`
     CREATE INDEX IF NOT EXISTS idx_aluno_ano_ano_serie ON aluno_ano(ano, serie);
+    CREATE INDEX IF NOT EXISTS idx_pwdreq_status ON password_reset_requests(status);
+    CREATE INDEX IF NOT EXISTS idx_pwdreq_criado_em ON password_reset_requests(criado_em);
     CREATE INDEX IF NOT EXISTS idx_simulados_ano_turma ON simulados(ano, turma);
     CREATE INDEX IF NOT EXISTS idx_simulados_ano_unidade ON simulados(ano, unidade);
     CREATE INDEX IF NOT EXISTS idx_questoes_ano_curso_serie_unidade ON questoes(ano, curso, serie, unidade);

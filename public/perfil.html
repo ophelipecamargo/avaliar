@@ -34,7 +34,7 @@
             </div>
             <div class="field">
               <label>Data de nascimento</label>
-              <input type="date" id="perfilNascimento">
+              <input type="date" id="perfilNascimento" required>
             </div>
             <div class="field" id="perfilIdadeWrap" style="display:none;">
               <label>Idade</label>
@@ -42,15 +42,15 @@
             </div>
             <div class="field">
               <label>Email</label>
-              <input type="email" id="perfilEmail" placeholder="exemplo@email.com">
+              <input type="email" id="perfilEmail" placeholder="exemplo@email.com" required>
             </div>
             <div class="field">
               <label>Telefone</label>
-              <input type="tel" id="perfilTelefone" placeholder="(00) 00000-0000">
+              <input type="tel" id="perfilTelefone" placeholder="(00) 00000-0000" required>
             </div>
             <div class="field">
               <label>Estado</label>
-              <select id="perfilEstado">
+              <select id="perfilEstado" required>
                 <option value="">Selecione...</option>
                 <option value="AC">AC - Acre</option>
                 <option value="AL">AL - Alagoas</option>
@@ -83,16 +83,16 @@
             </div>
             <div class="field">
               <label>Cidade</label>
-              <input type="text" id="perfilCidade" placeholder="Sua cidade">
+              <input type="text" id="perfilCidade" placeholder="Sua cidade" required>
             </div>
             <div class="field" style="grid-column:1/-1;">
               <label>Endereço</label>
-              <input type="text" id="perfilEndereco" placeholder="Rua, numero, bairro">
+              <input type="text" id="perfilEndereco" placeholder="Rua, numero, bairro" required>
             </div>
           </div>
           <div class="perfil-msg" id="perfilMsg"></div>
           <div class="perfil-actions perfil-actions-bottom">
-            <a class="btn btn-secondary" href="alterar-senha.html">Trocar senha</a>
+            <a class="btn btn-secondary" id="btnTrocarSenhaPerfil" href="alterar-senha.html">Trocar senha</a>
             <button class="btn" id="btnSalvarPerfil">Salvar</button>
           </div>
         </div>

@@ -21,6 +21,7 @@ Variaveis de ambiente
 - `NODE_ENV` use `production` para cookies seguros em HTTPS
 - `DATABASE_URL` string completa do Postgres (opcional)
 - `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` credenciais do Postgres
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` envio de e-mail (opcional)
 
 Estrutura
 - `server.js` API, sessao e regras de negocio

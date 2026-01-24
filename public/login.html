@@ -11,45 +11,46 @@
         <div class="login-card">
             <h1 class="login-logo">Avalia<span>CEEP</span></h1>
 
-            <input type="text" id="usuario" placeholder="Matrícula">
-            <div class="login-field">
-              <input type="password" id="senha" placeholder="Senha">
+            <div class="login-group">
+              <label class="login-label" for="usuario">Usuário (Matrícula) *</label>
+              <input type="text" id="usuario" class="login-input" placeholder="Digite sua matrícula">
+            </div>
+
+            <div class="login-group">
+              <label class="login-label" for="senha">Senha *</label>
+              <div class="login-field login-field--boxed">
+                <input type="password" id="senha" placeholder="Digite sua senha">
               <button type="button" class="toggle-senha" aria-label="Mostrar senha" onclick="toggleSenha('senha', this)">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="2"/>
                   <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
                 </svg>
               </button>
+              </div>
             </div>
 
-            <button onclick="login()">Entrar</button>
-            <div class="login-links">
-  <a href="#" onclick="abrirEsqueciSenha(); return false;">Esqueci minha senha</a>
-</div>
+            <button class="login-btn" onclick="login()">Entrar</button>
+
+            <div class="login-help-wrap">
+              <div class="login-links login-links-split">
+                <a href="solicitar-senha.html">Recuperar senha</a>
+                <a href="#" id="ajudaLoginLink" onclick="toggleAjudaLogin(event)">Primeiro acesso</a>
+              </div>
+
+              <div class="login-help-pop" id="ajudaLoginPop" role="note" aria-live="polite">
+                <div class="login-help-pop-title">Primeiro acesso</div>
+                <p>
+                  Complete seu perfil e altere a senha após o login.
+                  Se a senha foi redefinida, você irá direto para a troca de senha.
+                </p>
+              </div>
+            </div>
 
             <p id="erro" role="status" aria-live="polite"></p>
         </div>
     </div>
 
     <script src="script.js"></script>
-    <div class="modal-backdrop" id="modalEsqueciSenha" style="display:none;">
-  <div class="modal">
-    <div class="modal-header">
-      <span>RECUPERAÇÃO DE SENHA</span>
-      <button class="btn-sm" onclick="fecharEsqueciSenha()">X</button>
-    </div>
-    <div class="modal-body">
-      
-      <div style="font-size:13px;color:#334155;line-height:1.6;">
-        <p>Alunos, professores e gestores devem solicitar a redefinição de senha pelo e-mail <b>avaliaceepadm@gmail.com</b>, informando nome completo e matrícula.</p>
-        <p>O atendimento será realizado o mais breve possível.</p>
-      </div>
-      <div style="margin-top:14px;display:flex;justify-content:flex-end;">
-        <button class="btn" onclick="fecharEsqueciSenha()">Entendi</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
