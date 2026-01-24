@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Simulados</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+
+  <main class="page">
+    <div class="notice" id="notice">
+      
+      Caro usuário, os simulados agendados aparecem aqui, mas só liberam no <b>horário agendado</b> para a sua turma.
+      <span id="infoTurmaAluno" style="float:right; font-weight:700;"></span>
+    </div>
+
+    <section class="panel">
+      <div class="panel-title">SIMULADOS DISPONÍVEIS</div>
+      <div class="panel-body">
+
+
+        <div class="table-wrap">
+          <table class="table" id="tabelaSimuladosAluno">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Unidade</th>
+                <th>Início</th>
+                <th>Fim</th>
+                <th>Duração</th>
+                <th>Questões</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="9">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

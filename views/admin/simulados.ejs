@@ -1,0 +1,121 @@
+<%- include('../partials/header') %>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1>Simulados</h1>
+
+    <button class="btn-primario" id="btnNovoSimulado">
+      Novo Simulado
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>Simulados cadastrados</h2>
+
+    <div id="simuladosMsg" class="muted"></div>
+
+    <div class="table-wrap">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Curso</th>
+            <th>Série</th>
+            <th>Unidade</th>
+            <th>Data</th>
+            <th>Hora</th>
+            <th>Qtd</th>
+            <th>Nota</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="simuladosTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalSimulado" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitulo">Novo Simulado</h3>
+      <button class="icon-btn" id="fecharModal">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Título</label>
+          <input id="sTitulo" type="text" placeholder="Ex: Avaliação 1ª Unidade - Informática 1º Ano" />
+        </div>
+
+        <div class="form-group">
+          <label>Curso</label>
+          <select id="sCurso"></select>
+        </div>
+
+        <div class="form-group">
+          <label>Série</label>
+          <select id="sSerie"></select>
+        </div>
+
+        <div class="form-group">
+          <label>Ano (vigente)</label>
+          <input id="sAno" type="text" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Unidade</label>
+          <select id="sUnidade"></select>
+        </div>
+
+        <div class="form-group">
+          <label>Data de aplicação</label>
+          <input id="sData" type="date" />
+        </div>
+
+        <div class="form-group">
+          <label>Horário</label>
+          <input id="sHora" type="time" />
+        </div>
+
+        <div class="form-group">
+          <label>Duração</label>
+          <input id="sDuracao" type="text" value="90 minutos" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Quantidade de questões</label>
+          <input id="sQtd" type="number" min="1" />
+        </div>
+
+        <div class="form-group">
+          <label>Nota total</label>
+          <input id="sNota" type="number" min="1" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Valor por questão</label>
+          <input id="sValor" type="text" readonly />
+        </div>
+      </div>
+
+      <div class="alert-erro" id="simuladoErro" style="display:none;"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secundario" id="cancelarModal">Cancelar</button>
+      <button class="btn-primario" id="salvarSimulado">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/script.js"></script>
+<script>
+  // ao carregar, chama a função do script.js
+  window.initSimulados && window.initSimulados();
+</script>
+
+<%- include('../partials/footer') %>

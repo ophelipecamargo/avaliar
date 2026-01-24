@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Abrir Simulado</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app page-simulados">
+
+  <header id="header"></header>
+
+  <main class="page">
+    <section class="panel">
+      <div class="panel-title">SIMULADO</div>
+
+      <div class="panel-body">
+        <div id="simInfo" style="margin-bottom:14px;"></div>
+
+        <div class="toolbar" style="margin-bottom:12px;">
+          <button class="btn" id="btnCriarQuestao">+ Criar questão</button>
+          <button class="btn btn-secondary" id="btnAdicionarBanco">Adicionar do banco</button>
+
+          <div style="margin-left:auto; font-weight:800; color:#1E3A8A;">
+            Questões: <span id="qCount">0</span> / <span id="qMax">0</span>
+          </div>
+        </div>
+        <div id="limiteMsg" class="notice" style="display:none; margin-bottom:12px;">
+          Limite de questões atingido. Para adicionar mais, remova uma questão existente.
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="tabelaQuestoesSimulado">
+            <thead>
+              <tr>
+                <th>Enunciado</th>
+                <th>Correta</th>
+                <th>Matéria</th>
+                <th>Cadastrada por</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+
+      </div>
+    </section>
+  </main>
+  
+<!-- MODAL: Criar Questão -->
+<div class="modal-backdrop" id="modalCriarQuestao">
+  <div class="modal" style="max-width: 860px;">
+    <div class="modal-header">
+      <span>Criar questão</span>
+      <button class="btn-sm" id="fecharCriarQuestao">X</button>
+    </div>
+
+    <div class="modal-body">
+      <div id="erroCriarQuestao" class="notice" style="display:none; background:#FFE4E6; border-color:#FCA5A5;"></div>
+
+      <!-- Dados herdados do simulado -->
+      <div class="notice" style="background:#EEF2FF; border-color:#D6E0FF;">
+        <b>Série:</b> <span id="cqSerie"></span> &nbsp;&nbsp;
+        <b>Curso:</b> <span id="cqCurso"></span> &nbsp;&nbsp;
+        <b>Unidade:</b> <span id="cqUnidade"></span>
+      </div>
+
+      <div class="field" style="margin-bottom:12px;">
+        <label>Enunciado</label>
+        <textarea id="cqEnunciado" rows="4" style="width:100%; padding:10px; border-radius:10px; border:1px solid #D6E0FF;"></textarea>
+      </div>
+
+      <div class="field" style="margin-bottom:12px;">
+        <label>Imagem (opcional)</label>
+        <input type="file" id="cqImagem" accept="image/*" />
+        <div id="cqPreviewWrap" class="cq-preview-wrap">
+  <img id="cqPreview" class="cq-thumb" alt="Pré-visualização da imagem" />
+  <div style="font-size:12px;opacity:.85;margin-top:6px;">Clique na imagem para ampliar</div>
+</div>
+
+      </div>
+<div class="field" style="grid-column: 1 / -1;">
+  <label>Disciplina</label>
+
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <select id="cqDisciplina" style="flex:1; min-width:240px;">
+      <option value="">Carregando...</option>
+    </select>
+
+    <button type="button" class="btn-sm" id="btnNovaDisciplina">
+      + Cadastrar disciplina
+    </button>
+  </div>
+
+  <small style="opacity:.8;">
+    Se não existir na lista, cadastre aqui e ela já fica disponível para o simulado.
+  </small>
+</div>
+
+
+      <div class="form-grid">
+        <div class="field" style="grid-column: 1 / -1;">
+          <label><b>Colar alternativas (opcional)</b></label>
+          <textarea id="colarAlternativas" rows="4"
+            placeholder="Cole aqui A, B, C, D, E de uma vez..."
+            style="width:100%; padding:10px; border-radius:10px; border:1px solid #D6E0FF;"></textarea>
+
+          <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
+            <button type="button" class="btn-sm" id="btnAplicarAlternativas">Aplicar</button>
+            <button type="button" class="btn-sm" id="btnLimparAlternativas">Limpar</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Alternativa A</label>
+          <input id="cqA" />
+        </div>
+        <div class="field">
+          <label>Alternativa B</label>
+          <input id="cqB" />
+        </div>
+        <div class="field">
+          <label>Alternativa C</label>
+          <input id="cqC" />
+        </div>
+        <div class="field">
+          <label>Alternativa D</label>
+          <input id="cqD" />
+        </div>
+        <div class="field">
+          <label>Alternativa E (opcional)</label>
+          <input id="cqE" />
+        </div>
+
+        <div class="field">
+          <label>Correta</label>
+          <select id="cqCorreta">
+            <option value="">Selecione...</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancelarCriarQuestao">Cancelar</button>
+        <button class="btn" id="salvarCriarQuestao">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ============================
+     MODAL: BANCO DE QUESTÕES
+============================ -->
+<div class="modal" id="modalBancoQuestoes">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>BANCO DE QUESTÕES</h3>
+      <button id="fecharBancoQuestoes" class="btn-close">X</button>
+    </div>
+
+    <div class="modal-body">
+        <div class="bq-filtros">
+          <div>
+            <label>Curso</label>
+            <select id="fCurso" class="input">
+              <option value="">Selecione...</option>
+            <option value="AGRONEGOCIO">AGRONEGOCIO</option>
+            <option value="AGROPECURA">AGROPECURA</option>
+            <option value="AGROECOLOGIA">AGROECOLOGIA</option>
+            <option value="ADMINISTRAÇÃO">ADMINISTRAÇÃO</option>
+            <option value="INFORMATICA">INFORMATICA</option>
+            <option value="MARLKENTIG">MARLKENTIG</option>
+            <option value="REDES DE COMPUTADORES">REDES DE COMPUTADORES</option>
+          </select>
+        </div>
+
+          <div>
+            <label>Unidade</label>
+            <input id="fUnidade" class="input" disabled />
+          </div>
+
+          <div>
+            <label>Ano</label>
+            <select id="fAnoBanco" class="input">
+              <option value="">Todos</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Disciplina</label>
+            <select id="fDisciplina" class="input">
+              <option value="">Todas</option>
+            </select>
+          </div>
+
+        <div>
+          <label>Buscar</label>
+          <input id="fBusca" class="input" placeholder="Digite parte do enunciado..." />
+        </div>
+      </div>
+
+      <div class="bq-tabela-wrap">
+        <div class="bq-tabela-scroll">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th>Enunciado</th>
+                <th style="width:110px;">Correta</th>
+                <th style="width:180px;">Disciplina</th>
+                <th style="width:160px;">Cadastrada por</th>
+                <th style="width:220px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyBancoQuestoes"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bq-footer">
+        <div id="bqInfo"></div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-sm" id="bqPrev">Anterior</button>
+          <button class="btn-sm" id="bqNext">Próxima</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function limparPrefixo(txt){
+  return txt.replace(/^\s*[A-E]\s*[\)\.\:\-]\s*/i,'').trim();
+}
+
+document.getElementById("btnAplicarAlternativas").onclick = () => {
+  let texto = document.getElementById("colarAlternativas").value;
+  let linhas = texto.split("\n").filter(l => l.trim() != "");
+
+  linhas = linhas.map(l => limparPrefixo(l));
+
+  if(linhas.length < 4){
+    alert("Cole no formato:\nA) ...\nB) ...\nC) ...\nD) ...\nE) ...");
+    return;
+  }
+
+  document.getElementById("cqA").value = linhas[0] || "";
+  document.getElementById("cqB").value = linhas[1] || "";
+  document.getElementById("cqC").value = linhas[2] || "";
+  document.getElementById("cqD").value = linhas[3] || "";
+  document.getElementById("cqE").value = linhas[4] || "";
+};
+
+document.getElementById("btnLimparAlternativas").onclick = () => {
+  document.getElementById("colarAlternativas").value = "";
+  ["cqA","cqB","cqC","cqD","cqE"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+};
+</script>
+
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+  <script src="script.js"></script>
+</body>
+</html>

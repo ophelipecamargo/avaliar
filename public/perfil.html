@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Perfil</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+
+  <main class="page">
+    <div class="notice">
+      <strong>Perfil do usuário</strong><br>
+      Atualize seus dados pessoais.
+    </div>
+
+    <section class="panel">
+      <div class="panel-title">PERFIL</div>
+      <div class="panel-body">
+        <div class="perfil-card" id="perfilCard">
+          <div class="perfil-header">
+            <div>
+              <div class="perfil-title">Perfil do usuário</div>
+              <div class="perfil-sub">Seus dados pessoais ficam salvos na conta.</div>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-top:12px;">
+            <div class="field" style="grid-column:1/-1;">
+              <label>Nome</label>
+              <input type="text" id="perfilNome" disabled>
+            </div>
+            <div class="field">
+              <label>Data de nascimento</label>
+              <input type="date" id="perfilNascimento">
+            </div>
+            <div class="field" id="perfilIdadeWrap" style="display:none;">
+              <label>Idade</label>
+              <input type="text" id="perfilIdade" disabled>
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input type="email" id="perfilEmail" placeholder="exemplo@email.com">
+            </div>
+            <div class="field">
+              <label>Telefone</label>
+              <input type="tel" id="perfilTelefone" placeholder="(00) 00000-0000">
+            </div>
+            <div class="field">
+              <label>Estado</label>
+              <select id="perfilEstado">
+                <option value="">Selecione...</option>
+                <option value="AC">AC - Acre</option>
+                <option value="AL">AL - Alagoas</option>
+                <option value="AP">AP - Amapa</option>
+                <option value="AM">AM - Amazonas</option>
+                <option value="BA">BA - Bahia</option>
+                <option value="CE">CE - Ceara</option>
+                <option value="DF">DF - Distrito Federal</option>
+                <option value="ES">ES - Espirito Santo</option>
+                <option value="GO">GO - Goias</option>
+                <option value="MA">MA - Maranhao</option>
+                <option value="MT">MT - Mato Grosso</option>
+                <option value="MS">MS - Mato Grosso do Sul</option>
+                <option value="MG">MG - Minas Gerais</option>
+                <option value="PA">PA - Para</option>
+                <option value="PB">PB - Paraiba</option>
+                <option value="PR">PR - Parana</option>
+                <option value="PE">PE - Pernambuco</option>
+                <option value="PI">PI - Piaui</option>
+                <option value="RJ">RJ - Rio de Janeiro</option>
+                <option value="RN">RN - Rio Grande do Norte</option>
+                <option value="RS">RS - Rio Grande do Sul</option>
+                <option value="RO">RO - Rondonia</option>
+                <option value="RR">RR - Roraima</option>
+                <option value="SC">SC - Santa Catarina</option>
+                <option value="SP">SP - Sao Paulo</option>
+                <option value="SE">SE - Sergipe</option>
+                <option value="TO">TO - Tocantins</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Cidade</label>
+              <input type="text" id="perfilCidade" placeholder="Sua cidade">
+            </div>
+            <div class="field" style="grid-column:1/-1;">
+              <label>Endereço</label>
+              <input type="text" id="perfilEndereco" placeholder="Rua, numero, bairro">
+            </div>
+          </div>
+          <div class="perfil-msg" id="perfilMsg"></div>
+          <div class="perfil-actions perfil-actions-bottom">
+            <a class="btn btn-secondary" href="alterar-senha.html">Trocar senha</a>
+            <button class="btn" id="btnSalvarPerfil">Salvar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

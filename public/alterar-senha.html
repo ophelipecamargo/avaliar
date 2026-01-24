@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Alterar Senha</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+<main class="page">
+    <div class="notice" id="notice">
+      <strong>Atenção:</strong><br>
+      No primeiro acesso é obrigatório alterar sua senha.
+    </div>
+
+    <section class="panel">
+      <div class="panel-title">ALTERAR SENHA</div>
+
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="field" style="grid-column: 1 / -1;">
+            <label>Nova senha</label>
+            <input type="password" id="novaSenha" placeholder="Digite a nova senha" />
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <label>Confirmar senha</label>
+            <input type="password" id="confirmarSenha" placeholder="Repita a nova senha" />
+          </div>
+        </div>
+
+        <div class="panel-actions" style="justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-secondary" onclick="voltarPainel()">Cancelar</button>
+          <button class="btn" onclick="salvarNovaSenha()">Salvar</button>
+        </div>
+
+        <p id="msg" role="status" aria-live="polite" style="margin-top:10px; font-size:13px;"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

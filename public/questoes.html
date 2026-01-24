@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Questões</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+
+  <main class="page">
+      <div class="notice" id="notice">
+      <strong>Caro usuário,</strong><br>
+      Aqui você pode <b>cadastrar</b>, <b>editar</b> e <b>organizar</b> questões por unidade, série e curso.
+    </div>
+<section class="panel">
+      <div class="panel-title">QUESTÕES CADASTRADAS</div>
+
+      <div class="panel-body">
+        <div class="alunos-topbar">
+          <div class="busca-box">
+            <label for="buscaQuestao"><strong>Buscar:</strong></label>
+            <input id="buscaQuestao" type="text" placeholder="Enunciado, matéria, tags..." />
+          </div>
+
+          <div class="info-box" style="display:flex;gap:10px;align-items:center;">
+            <select id="fAnoQuestoes">
+              <option value="">Todos os anos</option>
+            </select>
+            <span id="infoTotalQuestoes">Total: 0</span>
+            <button id="btnNovaQuestao" class="btn">Nova questão</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tabelaQuestoes" class="table">
+            <thead>
+              <tr>
+                <th>Enunciado</th>
+                <th>Correta</th>
+                <th>Matéria</th>
+                <th>Cadastrada por</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="alunos-paginacao">
+          <button id="btnPrimeiraQ">« Primeira</button>
+          <button id="btnPrevQ">‹ Anterior</button>
+          <span id="infoPaginaQ">Página 1 de 1</span>
+          <button id="btnNextQ">Próximo ›</button>
+          <button id="btnUltimaQ">Última »</button>
+
+          <select id="selectPorPaginaQ">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="30">30</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    © 2026 - Portal AvaliaCEEP
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

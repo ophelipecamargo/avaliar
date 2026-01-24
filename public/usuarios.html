@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Usuários (Admin/Professor)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+<main class="page">
+    <div class="notice" id="notice">
+      <strong>Caro usuário,</strong><br>
+      Aqui você cadastra e gerencia acessos de <b>Admin</b> e <b>Professor</b>.
+      <br>Para gerenciar <b>Alunos</b> (importação CSV e série do ano), use a opção <b>Alunos</b>.
+    </div>
+
+    <section class="panel">
+      <div class="panel-title">USUÁRIOS</div>
+
+      <div class="panel-body">
+        <div class="panel-actions">
+          <button class="btn" id="btnNovoUsuario">+ Novo Admin/Professor</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="tabelaUsuarios">
+            <thead>
+              <tr>
+                <th>Matrícula (Login)</th>
+                <th>Nome</th>
+                <th>Perfil</th>
+                <th>Primeiro Acesso</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- preenchido pelo JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

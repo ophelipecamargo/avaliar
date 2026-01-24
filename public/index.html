@@ -1,0 +1,607 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>AvaliaCEEP | Portal de Avaliações Digitais</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      --tema: institucional;
+    }
+
+    body[data-theme="institucional"] {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --accent: #22c55e;
+    }
+
+    body[data-theme="jovem"] {
+      --bg: #0b1020;
+      --card: rgba(255,255,255,0.06);
+      --text: #eaf0ff;
+      --muted: rgba(234,240,255,0.75);
+      --primary: #8b5cf6;
+      --primary-dark: #6366f1;
+      --accent: #22c55e;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Manrope", "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    header {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      background: var(--card);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span {
+      color: var(--primary);
+    }
+
+    .btn-entrar {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      padding: 12px 26px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .top-nav a {
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+
+    .top-nav a:hover {
+      background: rgba(37,99,235,0.08);
+      color: var(--primary-dark);
+    }
+
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 40px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(37,99,235,0.1);
+      color: var(--primary);
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: 44px;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      color: var(--primary);
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-actions:empty {
+      display: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-weight: 700;
+    }
+
+    .btn-outline {
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 12px 26px;
+      border-radius: 14px;
+      font-weight: 700;
+    }
+
+    .hero-media {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+      min-height: 420px;
+      background: #e2e8f0;
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      object-position: center;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 50;
+      padding: 20px;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(2, 6, 23, 0.2);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: #0f172a;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .modal-body {
+      padding: 16px 18px 20px;
+    }
+
+    .btn-sm {
+      border: none;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn {
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .benefits {
+      background: var(--card);
+      padding: 80px 40px;
+    }
+
+    .section {
+      padding: 80px 40px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: var(--muted);
+      max-width: 820px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    .grid-3 {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .section-card {
+      background: var(--bg);
+      padding: 28px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: cardIn 0.6s ease both;
+    }
+
+    .section-card::before {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 120px;
+      height: 120px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(37,99,235,0.15), transparent 60%);
+      opacity: 0.8;
+    }
+
+    .section-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 30px rgba(2, 6, 23, 0.12);
+    }
+
+    .section-card h3 {
+      margin-bottom: 12px;
+    }
+
+    .section-card p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .grid-3 .section-card:nth-child(1) { animation-delay: 0.05s; }
+    .grid-3 .section-card:nth-child(2) { animation-delay: 0.12s; }
+    .grid-3 .section-card:nth-child(3) { animation-delay: 0.18s; }
+
+    .benefits h2 {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 40px;
+    }
+
+    .benefits-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .benefit {
+      background: var(--bg);
+      padding: 28px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: cardIn 0.6s ease both;
+    }
+
+    .benefit::before {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 120px;
+      height: 120px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(37,99,235,0.12), transparent 60%);
+      opacity: 0.8;
+    }
+
+    .benefit:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 30px rgba(2, 6, 23, 0.12);
+    }
+
+    .benefit h3 {
+      margin-bottom: 12px;
+    }
+
+    .benefit p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .benefits-grid .benefit:nth-child(1) { animation-delay: 0.05s; }
+    .benefits-grid .benefit:nth-child(2) { animation-delay: 0.12s; }
+    .benefits-grid .benefit:nth-child(3) { animation-delay: 0.18s; }
+
+    .contact {
+      background: linear-gradient(135deg, rgba(37,99,235,0.1), rgba(30,64,175,0.08));
+      padding: 70px 40px;
+    }
+
+    .contact-card {
+      max-width: 820px;
+      margin: 0 auto;
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: 0 18px 34px rgba(2, 6, 23, 0.12);
+      padding: 28px;
+      text-align: center;
+    }
+
+    .contact-card h2 {
+      margin-bottom: 12px;
+      font-size: 28px;
+    }
+
+    .contact-card p {
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .contact-email {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: rgba(37,99,235,0.12);
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    footer {
+      background: #0f172a;
+      color: #cbd5e1;
+      text-align: center;
+      padding: 24px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 60px 24px;
+      }
+
+      .top-nav {
+        display: none;
+      }
+
+      .hero-media {
+        min-height: 240px;
+      }
+
+      .hero-media img {
+        height: 100%;
+      }
+
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .benefits-grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        padding: 0 24px;
+      }
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body data-theme="institucional" id="topo">
+  <header>
+    <a class="logo" href="#topo">Avalia<span>CEEP</span></a>
+    <nav class="top-nav" aria-label="Menu principal">
+      <a href="#quem-somos">Quem somos</a>
+      <a href="#objetivos">Objetivos</a>
+      <a href="#beneficios">Benefícios</a>
+      <a href="#contato">Fale conosco</a>
+    </nav>
+    <a class="btn-entrar" href="login.html">Entrar</a>
+  </header>
+
+  <section class="hero">
+    <div>
+      <div class="badge">Portal de Avaliações Digitais • Sustentável</div>
+
+      <h1>
+        Avaliações digitais <br>
+        <span>mais rápidas</span> e <span>sem papel</span>
+      </h1>
+
+      <p>
+        O <strong>AvaliaCEEP</strong> é um portal educacional desenvolvido a partir da iniciativa
+        de alunos, com apoio do professor, para modernizar o processo avaliativo,
+        reduzir o uso de papel, acelerar a correção e contribuir com o meio ambiente.
+      </p>
+
+      <div class="hero-actions"></div>
+    </div>
+
+    <div class="hero-media">
+      <img src="assets/hero-lab.jpg" alt="Alunos em atividade no laboratorio" loading="lazy">
+    </div>
+  </section>
+
+  <section class="section" id="quem-somos">
+    <h2 class="section-title">Quem somos</h2>
+    <p class="section-subtitle">
+      Um projeto educacional desenvolvido para fortalecer a cultura digital na escola,
+      com foco em praticidade, acessibilidade e melhoria continua do processo avaliativo.
+    </p>
+
+    <div class="grid-3">
+      <div class="section-card">
+        <h3>Compromisso com a educação</h3>
+        <p>
+          O AvaliaCEEP apoia professores e estudantes com uma plataforma simples
+          e objetiva, alinhada as necessidades reais do ambiente escolar.
+        </p>
+      </div>
+      <div class="section-card">
+        <h3>Organização institucional</h3>
+        <p>
+          Centraliza simulados, questões e resultados, permitindo acompanhamento e
+          histórico pedagógico de forma estruturada e transparente.
+        </p>
+      </div>
+      <div class="section-card">
+        <h3>Inovação com responsabilidade</h3>
+        <p>
+          Integra tecnologia ao cotidiano escolar de forma segura, eficiente e acessível,
+          com foco na aprendizagem e na tomada de decisões.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="objetivos" style="background: var(--card);">
+    <h2 class="section-title">Objetivos do AvaliaCEEP</h2>
+    <p class="section-subtitle">
+      Reduzir o gasto com papel, acelerar o processo avaliativo e ampliar a eficiência na
+      correção e na análise de desempenho.
+    </p>
+
+    <div class="grid-3">
+      <div class="section-card">
+        <h3>Agilidade</h3>
+        <p>Aplicação e correção com mais rapidez, reduzindo tempo de espera por resultados.</p>
+      </div>
+      <div class="section-card">
+        <h3>Praticidade para o professor</h3>
+        <p>Automatiza tarefas repetitivas e reduz o trabalho manual de correção prova a prova.</p>
+      </div>
+      <div class="section-card">
+        <h3>Acesso</h3>
+        <p>Disponível para acesso via computador ou celular, dentro e fora da escola.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="benefits" id="beneficios">
+    <h2>Benefícios</h2>
+    <p class="section-subtitle">
+      Vantagens práticas para o cotidiano escolar e para a gestão do processo avaliativo.
+    </p>
+
+    <div class="benefits-grid">
+      <div class="benefit">
+        <h3>Economia de recursos</h3>
+        <p>Redução de impressão e materiais, contribuindo para um uso responsável de recursos.</p>
+      </div>
+
+      <div class="benefit">
+        <h3>Relatórios e acompanhamento</h3>
+        <p>Organiza dados por turma e simulado, apoiando intervenções pedagógicas.</p>
+      </div>
+
+      <div class="benefit">
+        <h3>Transparência</h3>
+        <p>Resultados claros, histórico e controle institucional para acompanhamento contínuo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" id="contato">
+    <div class="contact-card">
+      <h2>Fale conosco</h2>
+      <p>Para dúvidas, sugestões ou suporte, entre em contato com nossa equipe.</p>
+      <div class="contact-email">avaliaceepadm@gmail.com</div>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 • AvaliaCEEP • Educação, tecnologia e sustentabilidade
+  </footer>
+
+  <script src="script.js"></script>
+  <div class="modal-backdrop" id="modalEsqueciSenha" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <span>RECUPERAÇÃO DE SENHA</span>
+        <button class="btn-sm" onclick="fecharEsqueciSenha()">X</button>
+      </div>
+      <div class="modal-body">
+        <ul style="font-size:13px;color:#334155;line-height:1.6;margin-left:16px;">
+          <li><b>Aluno:</b> utilize sua matrícula como senha padrão.</li>
+          <li><b>Professor/Admin:</b> solicite a redefinição de senha informando nome completo e sua matrícula pelo e-mail:
+  <b>avaliaceepadm@gmail.com</b> </li>
+
+  <p>O atendimento será realizado o mais breve possível.</p>
+        </ul>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+          <button class="btn" onclick="fecharEsqueciSenha()">Entendi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

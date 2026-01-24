@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Resultados</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+
+  <main class="page">
+    <div class="notice" id="notice">
+      <strong>Caro usuário,</strong><br>
+      Esta área é destinada à consulta de <b>resultados</b> e relatórios.
+    </div>
+
+    <section class="panel">
+      <div class="panel-title">RESULTADOS</div>
+      <div class="panel-body">
+        <!-- ALUNO: histórico pessoal -->
+        <div id="resultadosAlunoWrap" style="display:none;">
+          <div class="subtitle" style="margin:0 0 10px 0;">Aqui você acompanha suas notas ao longo do ano.</div>
+
+          <!-- Removido: Total e Média (o aluno só visualiza os resultados) -->
+
+          <div style="overflow:auto;">
+            <table class="table" id="tabelaResultadosAluno" style="min-width:820px;">
+              <thead>
+                <tr>
+                  <th>Simulado</th>
+                  <th>Unidade</th>
+                  <th>Data realizada</th>
+                  <th>Acertos</th>
+                  <th>Nota</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="5">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADMIN/PROF: reservado para relatórios -->
+        <div id="resultadosAdminWrap" style="display:none;">
+  <div class="relatorios-grid">
+    <div class="relatorios-card relatorios-card--relatorio print-section" id="relatorioPrint">
+      <div class="relatorios-header">
+        <div>
+          <div class="relatorios-title">Relatórios</div>
+          <div class="relatorios-sub">Selecione: <b>Unidade → Turma → Simulado</b></div>
+        </div>
+        <button class="btn btn-secondary no-print" id="btnExportarPdf">Exportar PDF</button>
+      </div>
+
+      <div class="relatorios-filtros">
+        <div class="field">
+          <label>Unidade</label>
+          <select id="fRelUnidade">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Turma</label>
+          <select id="fRelTurma" disabled>
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="field" style="grid-column:1/-1;">
+          <label>Simulado</label>
+          <select id="fRelSimulado" disabled>
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="relatorioPrintHeader" class="relatorio-print-header print-only">
+        <div class="print-row">
+          <div><b>Simulado:</b> <span id="relPrintSimulado">-</span></div>
+          <div><b>Turma:</b> <span id="relPrintTurma">-</span></div>
+        </div>
+        <div class="print-row">
+          <div><b>Realizaram:</b> <span id="relPrintRealizaram">0</span></div>
+          <div><b>Não realizaram:</b> <span id="relPrintNaoRealizaram">0</span></div>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px;">
+        <table class="tabela" id="tabelaRelatorio">
+          <thead>
+            <tr>
+            <th>Aluno</th>
+            <th>Acertos</th>
+            <th>Nota</th>
+            <th>Data</th>
+            <th>Tempo</th>
+            <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="4">Selecione um simulado para visualizar.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="print-only print-footer">AvaliaCEEP</div>
+    </div>
+
+    <div class="relatorios-card relatorios-card--disciplina-alunos print-section" id="relatorioDiscPrint">
+      <div class="relatorios-header">
+        <div>
+          <div class="relatorios-title">Desempenho por disciplina</div>
+          <div class="relatorios-sub">Selecione: <b>Unidade → Turma → Disciplina</b></div>
+        </div>
+        <button class="btn btn-secondary no-print" id="btnExportarDiscPdf">Exportar PDF</button>
+      </div>
+
+      <div id="relDiscPrintHeader" class="relatorio-print-header print-only">
+        <div class="print-row">
+          <div><b>Unidade:</b> <span id="relDiscPrintUnidade">-</span></div>
+          <div><b>Turma:</b> <span id="relDiscPrintTurma">-</span></div>
+          <div><b>Disciplina:</b> <span id="relDiscPrintDisciplina">-</span></div>
+        </div>
+      </div>
+
+      <div class="relatorios-filtros">
+        <div class="field">
+          <label>Unidade</label>
+          <select id="fDiscUnidade">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Turma</label>
+          <select id="fDiscTurma" disabled>
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Disciplina</label>
+          <select id="fDiscDisciplina">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px;">
+        <table class="tabela" id="tabelaDisciplinaAlunos">
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Acertos</th>
+              <th>Total</th>
+              <th>Aproveitamento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="4">Selecione Unidade, Turma e Disciplina.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="print-only print-footer">AvaliaCEEP</div>
+    </div>
+  </div>
+</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

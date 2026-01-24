@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Realizar Simulado</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app page-simulado-realizar">
+
+  <header id="header"></header>
+
+  <main class="page">
+    <section class="panel">
+      <div class="panel-title">SIMULADO</div>
+      <div class="panel-body">
+
+        <div class="sim-top">
+          <div class="sim-meta">
+            <div class="sim-title" id="simTitulo">Simulado</div>
+            <div class="sim-sub" id="simUnidade"></div>
+          </div>
+
+          <div class="sim-status">
+            <div class="sim-pill">
+              Tempo: <b id="simTempo">--:--</b>
+            </div>
+            <div class="sim-pill">
+              <span id="simProgresso">00/00</span>
+            </div>
+            <div class="sim-pill sim-pill-warn" id="simAvisos">Avisos: 0/3</div>
+          </div>
+        </div>
+
+        <div id="startOverlay" class="sim-start">
+          <div class="notice" style="max-width:820px;margin:0 auto;">
+            <strong>Antes de começar:</strong><br>
+            Ao iniciar, o simulado tentará abrir em <b>tela cheia</b>. Evite trocar de aba ou sair — após <b>3 avisos</b> a tentativa é encerrada.
+          </div>
+          <div style="display:flex;justify-content:center;margin-top:12px;">
+            <button class="btn" id="btnStart">Iniciar simulado</button>
+          </div>
+        </div>
+
+        <div id="finalBox" style="display:none;"></div>
+
+        <div id="boxQuestao" class="sim-questao" style="display:none;"></div>
+
+        <div class="sim-actions" id="nav-botoes" style="display:none;">
+          <button class="btn btn-secondary" id="btnPrevQ">Anterior</button>
+          <button class="btn btn-secondary" id="btnNextQ">Próxima</button>
+          <button class="btn" id="btnEnviar">Enviar</button>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Alunos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+<main class="page">
+    <div class="notice" id="notice">
+      <strong>Caro usuário,</strong><br>
+      Esta área permite importar e gerenciar <b>Alunos</b>. Ao importar a planilha neste computador, o sistema registra automaticamente o <b>ano atual</b> como o ano de cadastro.
+    </div>
+
+    <section class="panel">
+      <div class="panel-title" id="panelTitle">ALUNOS</div>
+
+      <div class="panel-body">
+        <div class="alunos-toolbar">
+          <div class="busca-box">
+            <label for="buscaAluno"><strong>Buscar:</strong></label>
+            <input id="buscaAluno" type="text" placeholder="Digite nome ou matrícula..." />
+          </div>
+
+          <div class="panel-actions">
+            <button class="btn" id="btnNovoAluno">+ Novo Aluno</button>
+            <button class="btn btn-secondary" id="btnImportarCSV">Importar alunos (CSV)</button>
+            <input type="file" id="fileCSV" accept=".csv" style="display:none;" />
+          </div>
+
+          <div class="info-box">
+            <span id="infoTotalAlunos">Total: 0</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="tabelaAlunos">
+            <thead>
+              <tr>
+                <th>Matrícula (Login)</th>
+                <th>Nome</th>
+                <th>Série</th>
+                <th>Ano</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- preenchido pelo JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="alunos-paginacao">
+  <button id="btnPrimeira">« Primeira</button>
+  <button id="btnPrev">‹ Anterior</button>
+
+  <span id="infoPagina">Página 1 de 1</span>
+
+  <button id="btnNext">Próximo ›</button>
+  <button id="btnUltima">Última »</button>
+
+  <select id="selectPorPagina" title="Itens por página">
+    <option value="10">10</option>
+    <option value="20" selected>20</option>
+    <option value="30">30</option>
+    <option value="50">50</option>
+  </select>
+</div>
+
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

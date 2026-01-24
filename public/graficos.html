@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AvaliaCEEP - Graficos</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="app">
+
+  <header id="header"></header>
+
+  <main class="page">
+    <div class="notice">
+      <strong>Graficos e ranking</strong><br>
+      Visualize o comparativo por serie e o ranking geral por turma.
+    </div>
+
+    <section class="panel">
+      <div class="panel-title">GRAFICOS</div>
+      <div class="panel-body">
+        <div class="graficos-grid">
+          <div class="relatorios-card relatorios-card--grafico">
+            <div class="relatorios-title">Comparativo por série</div>
+            <div class="relatorios-sub">Média das notas por <b>turma</b> (tentativas enviadas).</div>
+
+            <div class="relatorios-filtros" style="grid-template-columns: 1fr;">
+              <div class="field">
+                <label>Unidade</label>
+                <select id="fGrafUnidade">
+                  <option value="">Todas</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="relatorios-tabs" style="margin-top:10px;">
+              <button class="tab-btn ativo" data-serie="">Todas</button>
+              <button class="tab-btn" data-serie="1">1º</button>
+              <button class="tab-btn" data-serie="2">2º</button>
+              <button class="tab-btn" data-serie="3">3º</button>
+            </div>
+
+            <div id="graficoSerie" class="grafico-serie">
+              <div class="grafico-empty">Carregando...</div>
+            </div>
+
+            <div class="grafico-legenda">
+              <span class="dot"></span> <span>Média da turma</span>
+            </div>
+          </div>
+
+          <div class="relatorios-card relatorios-card--grafico">
+            <div class="ranking-title">Ranking (Top 10)</div>
+            <div class="table-wrap" style="margin-top:8px;">
+              <table class="tabela" id="tabelaRanking">
+                <thead>
+                  <tr>
+                    <th>Aluno</th>
+                    <th>Turma</th>
+                    <th>Curso</th>
+                    <th>Média</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyRanking">
+                  <tr><td colspan="4">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="relatorios-card relatorios-card--grafico" style="margin-top:16px;">
+          <div class="relatorios-title">Desempenho por disciplinas</div>
+          <div class="relatorios-sub">Distribuicao de acertos por disciplina.</div>
+
+          <div class="pie-wrap">
+            <div class="pie-canvas">
+              <canvas id="graficoPizza" width="320" height="320"></canvas>
+              <div id="graficoPizzaEmpty" class="grafico-empty">Carregando...</div>
+              <div id="graficoPizzaTotal" class="pie-total"></div>
+            </div>
+            <div id="graficoPizzaLegenda" class="pie-legend"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
