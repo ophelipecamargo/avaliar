@@ -77,6 +77,7 @@ Opcionais:
 ## 8) Scripts
 - `npm start`: inicia o servidor.
 - `npm run start:prod`: modo production.
+- `npm run backup:db`: gera backup do banco (mantem os 5 ultimos em `backups/`).
 
 ## 10) Principais paginas (front)
 - `dashboard.html`: atalho para funcoes por perfil.
@@ -84,7 +85,7 @@ Opcionais:
 - `simulados-aluno.html`: simulados do aluno.
 - `simulado-realizar.html`: execucao do simulado.
 - `resultados.html`: relatorios e resultados.
-- `graficos.html`: comparativo, ranking e pizza por disciplina.
+- `graficos.html`: comparativo e ranking.
 - `liberacoes.html`: liberacoes de tentativas bloqueadas.
 - `perfil.html`: dados pessoais e troca de senha.
 - `login.html`: acesso ao sistema.
@@ -207,7 +208,48 @@ Observacoes:
 - Sem dominio, certificados publicos confiaveis nao funcionam.
 - Para HTTPS sem alerta, e preciso ter um dominio valido e certificado de CA publica.
 
-## 15) Registro e protecao (Brasil)
+## 15) Backup diario automatico (Windows)
+Requisito: `pg_dump` instalado (PostgreSQL instalado no servidor).
+
+Comando unico (agendar backup diario e manter 5 ultimos):
+1) Ajuste os caminhos abaixo:
+   - Node: `C:\Program Files\nodejs\node.exe`
+   - Projeto: `C:\Users\felip\Documents\avaliaceep`
+2) Execute no PowerShell como Administrador:
+
+```
+schtasks /Create /SC DAILY /ST 02:00 /TN "AvaliaCEEP-Backup" /TR "\"C:\Program Files\nodejs\node.exe\" C:\Users\felip\Documents\avaliaceep\scripts\backup-db.js" /RL HIGHEST
+```
+
+Notas:
+- O script cria backups em `backups/` e remove os mais antigos (mantem 5).
+- O `.env` deve estar configurado com credenciais do Postgres.
+
+## 16) Iniciar junto com o Windows (servico)
+Objetivo: o portal sobe automaticamente ao ligar o servidor.
+
+Opcao A (Task Scheduler, sem software extra):
+```
+schtasks /Create /SC ONSTART /TN "AvaliaCEEP-Server" /TR "cmd /c \"cd /d C:\Users\felip\Documents\avaliaceep && C:\Program Files\nodejs\node.exe server.js\"" /RL HIGHEST
+```
+
+Opcao B (NSSM, mais estavel):
+1) Baixe e instale o NSSM.
+2) Crie o servico:
+   - Path: `C:\Program Files\nodejs\node.exe`
+   - Startup dir: `C:\Users\felip\Documents\avaliaceep`
+   - Arguments: `server.js`
+3) Inicie o servico e marque para iniciar automaticamente.
+
+## 17) Preparar servidor (resumo)
+1) Instalar Node.js LTS e PostgreSQL.
+2) Clonar o projeto e rodar `npm install`.
+3) Configurar `.env` (Postgres, SMTP, SESSION_SECRET).
+4) Liberar porta no firewall (3000 ou 443 se usar proxy).
+5) Configurar IP fixo externo e NAT no roteador.
+6) Subir o servidor com `npm start` ou como servico.
+
+## 18) Registro e protecao (Brasil)
 Recomendacoes:
 1. Registro de Programa de Computador no INPI (prova de autoria).
 2. Definicao de licenca:
@@ -218,11 +260,11 @@ Recomendacoes:
 
 Obs.: Este texto nao substitui orientacao juridica.
 
-## 16) Manutencao anual (fluxo sugerido)
+## 19) Manutencao anual (fluxo sugerido)
 1. No inicio do ano, selecione o novo ano no header.
 2. Importe alunos do ano novo (sem migrar automaticamente).
 3. Crie simulados do novo ano.
 4. O historico do ano anterior fica consultavel.
 
-## 17) Contato tecnico
+## 20) Contato tecnico
 Equipe AvaliaCEEP.
