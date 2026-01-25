@@ -842,7 +842,6 @@ async function initDashboard() {
           <div class="card-title">Perfil</div>
           <div class="card-desc">Atualizar dados pessoais</div>
         </div>
-
       `;
     } else {
       cards.innerHTML = `
@@ -3194,7 +3193,7 @@ async function initLiberacoes(){
       const r = await api("/api/admin/liberacoes");
       const rows = r.rows || [];
       if (!rows.length){
-        tbody.innerHTML = `<tr><td colspan="7">Nenhuma liberacao pendente.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7">Nenhuma liberação pendente.</td></tr>`;
         return;
       }
 
