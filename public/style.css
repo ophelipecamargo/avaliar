@@ -17,8 +17,7 @@ html, body{ width:100%; }
    LOGIN (tela com fundo)
 ========================= */
 body{
-  background: url("img/fundo.png") no-repeat center center;
-  background-size: cover;
+  background:#0D1B3D;
 }
 
 /* Camada escura por cima da imagem */
@@ -225,6 +224,27 @@ body{
 }
 .login-links a{ color:#1E3A8A; font-weight:700; text-decoration:none; }
 .login-links a:hover{ text-decoration:underline; }
+.login-form-gap{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.login-form-gap input,
+.login-form-gap select,
+.login-form-gap button{
+  margin:0 !important;
+}
+.login-select{
+  width:100%;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+.login-btn-full{
+  width:100%;
+  padding:10px;
+  border-radius:6px;
+}
 .login-help-wrap{
   position:relative;
   margin-top:12px;

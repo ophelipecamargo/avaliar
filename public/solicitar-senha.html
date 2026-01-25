@@ -14,17 +14,17 @@
         Preencha os dados para solicitar a redefinição de senha.
       </p>
 
-      <form id="formSolicitarSenha">
+      <form id="formSolicitarSenha" class="login-form-gap">
         <input type="text" id="solicMatricula" placeholder="Matrícula" required />
         <input type="email" id="solicEmail" placeholder="E-mail cadastrado" required />
-        <select id="solicPerfil" style="width:100%;padding:10px;margin-top:10px;border-radius:6px;border:1px solid #ccc;">
+        <select id="solicPerfil" class="login-select">
           <option value="">Perfil (opcional)</option>
           <option value="aluno">Aluno</option>
           <option value="professor">Professor</option>
           <option value="admin">Admin</option>
         </select>
 
-        <button type="submit" id="btnSolicitarSenha" style="margin-top:12px;">Enviar solicitação</button>
+        <button type="submit" id="btnSolicitarSenha" class="login-btn-full">Enviar solicitação</button>
       </form>
 
       <p id="solicitarMsg" role="status" aria-live="polite" style="margin-top:10px;"></p>
