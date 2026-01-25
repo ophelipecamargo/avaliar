@@ -773,9 +773,9 @@ body.page-simulado-realizar .sim-final-disc-title{
   margin-bottom:8px;
 }
 body.page-simulado-realizar .sim-final-disc-list{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap:8px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 body.page-simulado-realizar .sim-final-disc-item{
   display:flex;
@@ -795,6 +795,41 @@ body.page-simulado-realizar .sim-final-disc-name{
 body.page-simulado-realizar .sim-final-disc-value{
   font-weight:900;
   color:#1E3A8A;
+}
+body.page-simulado-realizar .sim-final-motivation{
+  margin-top:12px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #D6E0FF;
+  background:#F8FAFF;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+body.page-simulado-realizar .sim-final-motivation-emoji{
+  font-size:22px;
+  line-height:1;
+}
+body.page-simulado-realizar .sim-final-motivation-title{
+  font-weight:900;
+  color:#0F172A;
+}
+body.page-simulado-realizar .sim-final-motivation-text{
+  margin-top:2px;
+  font-size:12px;
+  color:#334155;
+}
+body.page-simulado-realizar .sim-final-motivation--perfeito{
+  background:#ECFDF5;
+  border-color:#A7F3D0;
+}
+body.page-simulado-realizar .sim-final-motivation--feliz{
+  background:#EEF2FF;
+  border-color:#C7D2FE;
+}
+body.page-simulado-realizar .sim-final-motivation--triste{
+  background:#FFF7ED;
+  border-color:#FED7AA;
 }
 @media (max-width: 600px){
   body.page-simulado-realizar .sim-final-metrics{ grid-template-columns: 1fr; }

@@ -2576,6 +2576,38 @@ async function initSimuladosAluno(){
       const acertos = tent?.acertos ?? tent?.tentativa?.acertos;
       const nota = tent?.nota ?? tent?.tentativa?.nota;
       const status = tent?.status ?? tent?.tentativa?.status;
+      const totalNum = Number(total || 0);
+      const acertosNum = Number(acertos || 0);
+      const pct = totalNum > 0 ? (acertosNum / totalNum) : 0;
+      const mensagens = {
+        perfeito: [
+          "Resultado perfeito! Mantenha o foco e continue assim.",
+          "Parabéns! Você dominou todo o conteúdo.",
+          "Excelente desempenho! Continue nesse ritmo.",
+          "Você acertou tudo! Orgulho total.",
+          "Top demais! Continue buscando a excelência.",
+        ],
+        feliz: [
+          "Boa! Você está no caminho certo. Continue evoluindo.",
+          "Muito bem! Com um pouco mais de treino, você chega ao topo.",
+          "Ótimo resultado! Continue praticando para melhorar ainda mais.",
+          "Belo desempenho! Mantenha a constância.",
+          "Você foi bem! Foque nos pontos que errou.",
+        ],
+        triste: [
+          "Resultado de hoje é aprendizado para amanhã. Bora estudar mais e subir esse desempenho!",
+          "Ainda não foi o resultado ideal, mas dá pra virar o jogo! Foco nos estudos que a melhora vem.",
+          "Não desanime! Cada erro é uma chance de aprender. Estude mais um pouco e você vai evoluir na próxima avaliação.",
+          "Use esse resultado como impulso pra crescer. A próxima avaliação é sua chance de mostrar evolução!",
+          "Não foi como você esperava, mas faz parte do processo! Estudando um pouco mais, o resultado melhora rapidinho.",
+        ],
+      };
+      const nivel = (totalNum > 0 && acertosNum === totalNum) ? "perfeito" : (pct >= 0.5 ? "feliz" : "triste");
+      const emojis = { perfeito: "🎉", feliz: "😊", triste: "😕" };
+      const titulos = { perfeito: "Excelente!", feliz: "Boa!", triste: "Vamos melhorar!" };
+      const lista = mensagens[nivel] || mensagens.triste;
+      const msg = lista[Math.floor(Math.random() * lista.length)];
+
       const box = document.getElementById("finalBox");
       if (box){
         box.style.display = "block";
@@ -2596,6 +2628,14 @@ async function initSimuladosAluno(){
               <div class="sim-final-box sim-final-box--nota">
                 <div class="sim-final-label">Nota Final</div>
                 <div class="sim-final-value">${escapeHtml(fmtNotaLocal(nota ?? 0))}</div>
+              </div>
+            </div>
+
+            <div class="sim-final-motivation sim-final-motivation--${nivel}">
+              <div class="sim-final-motivation-emoji">${emojis[nivel]}</div>
+              <div>
+                <div class="sim-final-motivation-title">${titulos[nivel]}</div>
+                <div class="sim-final-motivation-text">${escapeHtml(msg)}</div>
               </div>
             </div>
 
@@ -3359,7 +3399,7 @@ async function initSimulados(){
       <div class="modal" role="dialog" aria-modal="true">
         <div class="modal-header">
           <span>REPLICAR SIMULADO</span>
-          <button class="btn-sm" id="btnFecharReplicar" style="padding:6px 10px;border-radius:10px;border:0;background:#ffffff;color:#1E3A8A;font-weight:900;cursor:pointer;">X</button>
+          <button class="btn-close" id="btnFecharReplicar" type="button" aria-label="Fechar">X</button>
         </div>
         <div class="modal-body">
           <div id="replicarErro" style="display:none; padding:10px; border-radius:10px; background:#FEE2E2; border:1px solid #FCA5A5; color:#991B1B; font-weight:800; margin-bottom:12px;"></div>
@@ -3844,7 +3884,7 @@ function dataHoraFormat(inicio_em, fim_em){
       <div class="modal">
         <div class="modal-header">
           <h3 id="tituloModalReplicar">REPLICAR SIMULADO</h3>
-          <button class="modal-close" id="fecharModalReplicarBtn">×</button>
+          <button class="btn-close" id="fecharModalReplicarBtn" type="button" aria-label="Fechar">X</button>
         </div>
 
         <div class="modal-body">
@@ -3993,7 +4033,7 @@ function dataHoraFormat(inicio_em, fim_em){
       <div class="modal">
         <div class="modal-header">
           <h3 id="tituloModalReaplicar">REAPLICAR SIMULADO</h3>
-          <button class="modal-close" id="fecharModalReaplicarBtn">×</button>
+          <button class="btn-close" id="fecharModalReaplicarBtn" type="button" aria-label="Fechar">X</button>
         </div>
 
         <div class="modal-body">
@@ -4582,7 +4622,7 @@ if (btnNovaDisc) {
         fecharModalCQ();
         await carregar();
         // Atualiza a listagem do Banco de Questões no curso atualmente selecionado
-        const ctx = { curso: (fCurso?.value || simuladoAtual.curso), serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: anoAtual() };
+        const ctx = buildBQContext();
         await listarBanco(ctx);
         alert("Questão atualizada!");
         return;
@@ -4655,6 +4695,20 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
     });
   }
 
+  function buildBQContext() {
+    const cursoSel = (fCurso?.value || simuladoAtual?.curso || "").trim();
+    let unidadeSel = String(fUnidade?.value || simuladoAtual?.unidade || "").trim();
+    let serieSel = String(simuladoAtual?.turma || "").trim();
+    const anoSel = simuladoAtual?.ano || anoAtual();
+
+    if (cursoSel && simuladoAtual?.curso && cursoSel !== simuladoAtual.curso) {
+      unidadeSel = "";
+      serieSel = "";
+    }
+
+    return { curso: cursoSel, unidade: unidadeSel, serie: serieSel, ano: anoSel };
+  }
+
   async function carregarDisciplinasFiltro(ctx) {
     if (!fDisciplina) return;
     fDisciplina.innerHTML = `<option value="">Todas</option>`;
@@ -4684,12 +4738,14 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
     const anoFiltro = String(fAnoBanco?.value || "").trim();
 
     const cursoSel = (fCurso?.value || ctx.curso || "").trim();
+    const unidadeSel = String(ctx.unidade || "").trim();
+    const serieSel = String(ctx.serie || "").trim();
 
     const qs = new URLSearchParams({
       ano: String(anoFiltro || ctx.ano),
       curso: cursoSel,
-      unidade: ctx.unidade,
-      serie: ctx.serie,
+      unidade: unidadeSel,
+      serie: serieSel,
       page: String(bqPage),
       limit: String(bqLimit),
     });
@@ -4832,7 +4888,7 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
 
         await carregar();
         // Atualiza o banco para refletir mudanças (ex.: se você decidir não listar repetidas depois)
-        const ctx = { curso: (fCurso?.value || simuladoAtual.curso), serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: anoAtual() };
+        const ctx = buildBQContext();
         await listarBanco(ctx);
         alert("Questão adicionada ao simulado!");
         return;
@@ -4859,7 +4915,7 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
           return;
         }
 
-        const ctx = { curso: simuladoAtual.curso, serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: anoAtual() };
+        const ctx = buildBQContext();
         await listarBanco(ctx);
         await carregar();
         alert("Questão excluída.");
@@ -4869,20 +4925,20 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
 
   if (bqPrev) bqPrev.addEventListener("click", async () => {
     bqPage = Math.max(1, bqPage - 1);
-    const ctx = { curso: (fCurso?.value || simuladoAtual.curso), serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: simuladoAtual.ano || anoAtual() };
+    const ctx = buildBQContext();
     await listarBanco(ctx);
   });
 
   if (bqNext) bqNext.addEventListener("click", async () => {
     bqPage += 1;
-    const ctx = { curso: (fCurso?.value || simuladoAtual.curso), serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: simuladoAtual.ano || anoAtual() };
+    const ctx = buildBQContext();
     await listarBanco(ctx);
   });
 
   if (fCurso) fCurso.addEventListener("change", async () => {
     // Permite selecionar questões de outro curso (unidade permanece fixa)
     bqPage = 1;
-    const ctx = { curso: fCurso.value || simuladoAtual.curso, serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: simuladoAtual.ano || anoAtual() };
+    const ctx = buildBQContext();
     // Recarrega disciplinas de acordo com o curso escolhido
     await carregarDisciplinasFiltro(ctx);
     await listarBanco(ctx);
@@ -4890,13 +4946,13 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
 
   if (fDisciplina) fDisciplina.addEventListener("change", async () => {
     bqPage = 1;
-    const ctx = { curso: (fCurso?.value || simuladoAtual.curso), serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: simuladoAtual.ano || anoAtual() };
+    const ctx = buildBQContext();
     await listarBanco(ctx);
   });
 
   if (fAnoBanco) fAnoBanco.addEventListener("change", async () => {
     bqPage = 1;
-    const ctx = { curso: (fCurso?.value || simuladoAtual.curso), serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: simuladoAtual.ano || anoAtual() };
+    const ctx = buildBQContext();
     await listarBanco(ctx);
   });
 
@@ -4904,7 +4960,7 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
     clearTimeout(bqDebounce);
     bqDebounce = setTimeout(async () => {
       bqPage = 1;
-      const ctx = { curso: (fCurso?.value || simuladoAtual.curso), serie: simuladoAtual.turma, unidade: simuladoAtual.unidade, ano: simuladoAtual.ano || anoAtual() };
+      const ctx = buildBQContext();
       await listarBanco(ctx);
     }, 250);
   });
@@ -4926,8 +4982,8 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
 
     bqPage = 1;
     await carregarAnosBanco();
-    await carregarDisciplinasFiltro(ctx);
-    await listarBanco(ctx);
+    await carregarDisciplinasFiltro(buildBQContext());
+    await listarBanco(buildBQContext());
     abrirBQ();
   });
 
