@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AvaliaCEEP - Abrir Simulado</title>
+  <title>Avaliar - Abrir Avaliação</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="app page-simulados">
@@ -12,7 +12,7 @@
 
   <main class="page">
     <section class="panel">
-      <div class="panel-title">SIMULADO</div>
+      <div class="panel-title">Avaliação</div>
 
       <div class="panel-body">
         <div id="simInfo" style="margin-bottom:14px;"></div>
@@ -44,6 +44,13 @@
           </table>
         </div>
 
+        <div class="paginacao-central" id="questoesPaginacao">
+          <button id="btnPrevQSim">‹ Anterior</button>
+          <span id="infoPaginaQSim">Página 1 de 1</span>
+          <button id="btnNextQSim">Próximo ›</button>
+          <span style="opacity:.75; font-size:12px;">5 por página</span>
+        </div>
+
 
       </div>
     </section>
@@ -60,7 +67,7 @@
     <div class="modal-body">
       <div id="erroCriarQuestao" class="notice" style="display:none; background:#FFE4E6; border-color:#FCA5A5;"></div>
 
-      <!-- Dados herdados do simulado -->
+      <!-- Dados herdados do Avaliação -->
       <div class="notice" style="background:#EEF2FF; border-color:#D6E0FF;">
         <b>Série:</b> <span id="cqSerie"></span> &nbsp;&nbsp;
         <b>Curso:</b> <span id="cqCurso"></span> &nbsp;&nbsp;
@@ -95,7 +102,7 @@
   </div>
 
   <small style="opacity:.8;">
-    Se não existir na lista, cadastre aqui e ela já fica disponível para o simulado.
+    Se não existir na lista, cadastre aqui e ela já fica disponível para o Avaliação.
   </small>
 </div>
 
@@ -171,7 +178,7 @@
             <select id="fCurso" class="input">
               <option value="">Selecione...</option>
             <option value="AGRONEGOCIO">AGRONEGOCIO</option>
-            <option value="AGROPECURA">AGROPECURA</option>
+            <option value="AGROPECUARIA">AGROPECUARIA</option>
             <option value="AGROECOLOGIA">AGROECOLOGIA</option>
             <option value="ADMINISTRAÇÃO">ADMINISTRAÇÃO</option>
             <option value="INFORMATICA">INFORMATICA</option>
@@ -265,7 +272,13 @@ document.getElementById("btnLimparAlternativas").onclick = () => {
 </script>
 
 
-  <footer class="footer">© 2026 - Portal AvaliaCEEP</footer>
+  <footer class="footer">© 2026 – Avaliar | Portal de Avaliações Digitais| CEEP<br>Acesso interno</footer>
   <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
+

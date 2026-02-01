@@ -1,11 +1,13 @@
 require("dotenv").config();
 const path = require("path");
 const fs = require("fs");
+const { spawn } = require("child_process");
 const multer = require("multer");
 const express = require("express");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const session = require("express-session");
+const crypto = require("crypto");
 const PgSession = require("connect-pg-simple")(session);
 
 const db = require("./db");
@@ -34,6 +36,7 @@ async function insertTentativa(simuladoId, matricula, terminaEm, ordemJson, inic
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const NODE_ENV = String(process.env.NODE_ENV || "").trim().toLowerCase();
 
 
 // Middlewares
@@ -62,6 +65,24 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Rate limit simples (login)
 const loginAttempts = new Map();
+
+// Tokens para impressão (uso externo ao app)
+const printTokens = new Map(); // token -> { user, exp }
+function createPrintToken(user) {
+  const token = crypto.randomUUID();
+  printTokens.set(token, { user, exp: Date.now() + 5 * 60 * 1000 });
+  return token;
+}
+function getPrintTokenUser(token) {
+  if (!token) return null;
+  const data = printTokens.get(token);
+  if (!data) return null;
+  if (Date.now() > data.exp) {
+    printTokens.delete(token);
+    return null;
+  }
+  return data.user || null;
+}
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
 const LOGIN_MAX = 8;
 
@@ -92,6 +113,36 @@ function registerFailedAttempt(ip) {
 
 function clearFailedAttempts(ip) {
   loginAttempts.delete(ip);
+}
+
+// Rate limit simples (solicitação de senha)
+const resetAttempts = new Map();
+const RESET_WINDOW_MS = 30 * 60 * 1000;
+const RESET_MAX = 5;
+
+function isResetLimited(ip) {
+  const now = Date.now();
+  const entry = resetAttempts.get(ip);
+  if (!entry) return false;
+  if (now - entry.first > RESET_WINDOW_MS) {
+    resetAttempts.delete(ip);
+    return false;
+  }
+  return entry.count >= RESET_MAX;
+}
+
+function registerResetAttempt(ip) {
+  const now = Date.now();
+  const entry = resetAttempts.get(ip);
+  if (!entry) {
+    resetAttempts.set(ip, { count: 1, first: now });
+    return;
+  }
+  if (now - entry.first > RESET_WINDOW_MS) {
+    resetAttempts.set(ip, { count: 1, first: now });
+    return;
+  }
+  entry.count += 1;
 }
 
 // Email (SMTP)
@@ -200,7 +251,11 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname || "").toLowerCase();
     const allowed = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+    const allowedMime = ["image/png", "image/jpeg", "image/gif", "image/webp"];
     if (!allowed.includes(ext)) {
+      return cb(new Error("Tipo de arquivo não permitido."));
+    }
+    if (!allowedMime.includes(String(file.mimetype || "").toLowerCase())) {
       return cb(new Error("Tipo de arquivo não permitido."));
     }
     return cb(null, true);
@@ -215,9 +270,35 @@ function requireStaff(req, res, next) {
   next();
 }
 
+// Atualiza atividade do aluno com throttling (evita writes excessivos)
+const lastActivityCache = new Map(); // matricula -> timestamp ms
+async function touchLastActivity(req) {
+  try {
+    const u = req.session?.user;
+    if (!u) return;
+    const perfil = String(u.perfil || "").trim().toLowerCase();
+    if (perfil !== "aluno") return;
+    const matricula = String(u.matricula || "").trim();
+    if (!matricula) return;
+    const now = Date.now();
+    const last = lastActivityCache.get(matricula) || 0;
+    if (now - last < 60000) return; // 1 min
+    lastActivityCache.set(matricula, now);
+    await db.prepare("UPDATE users SET last_activity=NOW() WHERE matricula=?").run(matricula);
+  } catch (_) {}
+}
+
 // Helpers
 async function requireLogin(req, res, next) {
-  if (!req.session?.user) return res.status(401).json({ ok: false, msg: "Não autenticado" });
+  if (!req.session?.user) {
+    const token = String(req.headers["x-print-token"] || req.query?.token || "").trim();
+    const tokenUser = getPrintTokenUser(token);
+    if (tokenUser) {
+      req.user = tokenUser;
+      return next();
+    }
+    return res.status(401).json({ ok: false, msg: "Não autenticado" });
+  }
   // Normaliza perfil e sincroniza com o banco (evita sessão antiga com perfil incorreto)
   try {
     const row = await db.prepare("SELECT perfil FROM users WHERE matricula=?").get(
@@ -232,25 +313,27 @@ async function requireLogin(req, res, next) {
     req.session.user.perfil = String(req.session.user.perfil || "").trim().toLowerCase();
   }
   req.user = req.session.user;
+  await touchLastActivity(req);
   next();
 }
 function requireAdmin(req, res, next) {
-  const p = String(req.session?.user?.perfil || "").trim().toLowerCase();
+  const p = String(req.user?.perfil || req.session?.user?.perfil || "").trim().toLowerCase();
   if (p !== "admin") return res.status(403).json({ ok: false, msg: "Sem permissão" });
   next();
 }
 
 
 function requireAdminOrProfessor(req, res, next) {
-  if (!req.session || !req.session.user) return res.status(401).json({ ok: false, msg: "Não autenticado." });
-  const p = String(req.session.user.perfil || "").trim().toLowerCase();
+  const perfil = String(req.user?.perfil || req.session?.user?.perfil || "").trim().toLowerCase();
+  if (!perfil) return res.status(401).json({ ok: false, msg: "Não autenticado." });
+  const p = perfil;
   if (p !== "admin" && p !== "professor") return res.status(403).json({ ok: false, msg: "Acesso negado." });
   next();
 }
 
 // Ano do sistema (preferir o ano exibido no portal via sessão)
 function anoSistema(req) {
-  const ano = Number(req.session?.user?.ano) || new Date().getFullYear();
+  const ano = Number(req.session?.user?.ano || req.user?.ano) || new Date().getFullYear();
   if (req.session?.user) req.session.user.ano = ano;
   return ano;
 }
@@ -338,6 +421,9 @@ app.post("/api/login", async (req, res) => {
       perfil: String(u.perfil || "").trim().toLowerCase(),
       ano: new Date().getFullYear()
     };
+    if (String(u.perfil || "").trim().toLowerCase() === "aluno") {
+      db.prepare("UPDATE users SET last_activity=NOW() WHERE matricula=?").run(u.matricula);
+    }
     clearFailedAttempts(ip);
     audit(req, "login.success", { matricula: u.matricula });
 
@@ -371,8 +457,27 @@ app.get("/api/me", async (req, res) => {
   });
 });
 
+// Ping de atividade (mantém online)
+app.post("/api/ping", requireLogin, async (req, res) => {
+  await touchLastActivity(req);
+  res.json({ ok: true });
+});
+
 app.get("/api/ano", requireLogin, (req, res) => {
   return res.json({ ok: true, ano: anoSistema(req) });
+});
+
+// Token temporário para impressão (app -> navegador externo)
+app.post("/api/print-token", requireLogin, (req, res) => {
+  const u = req.user || req.session?.user;
+  if (!u) return res.status(401).json({ ok: false, msg: "Não autenticado" });
+  const token = createPrintToken({
+    matricula: u.matricula,
+    nome: u.nome,
+    perfil: u.perfil,
+    ano: u.ano || new Date().getFullYear()
+  });
+  res.json({ ok: true, token });
 });
 
 app.put("/api/ano", requireLogin, (req, res) => {
@@ -429,11 +534,20 @@ app.put("/api/perfil", requireLogin, async (req, res) => {
     return res.status(400).json({ ok: false, msg: "Preencha todos os campos obrigatórios." });
   }
 
-  await db.prepare(`
-    UPDATE users
-    SET data_nascimento = ?, email = ?, estado = ?, cidade = ?, endereco = ?, telefone = ?
-    WHERE matricula = ?
-  `).run(dataNascimento, email, estado, cidade, endereco, telefone, req.session.user.matricula);
+  const isAluno = String(req.session.user.perfil || "").trim().toLowerCase() === "aluno";
+  if (isAluno) {
+    await db.prepare(`
+      UPDATE users
+      SET data_nascimento = ?, email = ?, estado = ?, cidade = ?, endereco = ?, telefone = ?, primeiro_acesso = 0
+      WHERE matricula = ?
+    `).run(dataNascimento, email, estado, cidade, endereco, telefone, req.session.user.matricula);
+  } else {
+    await db.prepare(`
+      UPDATE users
+      SET data_nascimento = ?, email = ?, estado = ?, cidade = ?, endereco = ?, telefone = ?
+      WHERE matricula = ?
+    `).run(dataNascimento, email, estado, cidade, endereco, telefone, req.session.user.matricula);
+  }
 
   return res.json({ ok: true });
 });
@@ -477,6 +591,11 @@ app.post("/api/password-requests", async (req, res) => {
   const norm = (v) => String(v || "").toLowerCase().replace(/\s+/g, " ").trim();
 
   const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
+  if (isResetLimited(ip)) {
+    audit(req, "password_request.rate_limited");
+    return res.status(429).json({ ok: false, msg: "Muitas tentativas. Aguarde alguns minutos." });
+  }
+  registerResetAttempt(ip);
 
   const user = await db.prepare(`
     SELECT matricula, nome, perfil, email
@@ -778,6 +897,21 @@ app.get("/api/admin/alunos-ano-atual", requireLogin, requireAdminOrProfessor, as
   `).all(ano);
 
   res.json({ ok: true, ano, rows });
+});
+
+// Admin/Professor: alunos online (últimos N minutos)
+app.get("/api/admin/alunos-online", requireLogin, requireAdminOrProfessor, async (req, res) => {
+  const ano = anoSistema(req);
+  const minutes = Math.max(1, Math.min(60, Number(req.query.minutes || 5)));
+  const rows = await db.prepare(`
+    SELECT u.matricula, u.nome, u.last_activity, a.serie
+    FROM users u
+    JOIN aluno_ano a ON a.matricula = u.matricula AND a.ano = ?
+    WHERE u.perfil = 'aluno'
+      AND u.last_activity >= NOW() - INTERVAL '${minutes} minutes'
+    ORDER BY u.last_activity DESC
+  `).all(ano);
+  res.json({ ok: true, ano, minutes, total: rows.length, rows });
 });
 
 // ===========================================
@@ -1149,7 +1283,7 @@ app.delete("/api/admin/simulados/:id", requireLogin, requireAdmin, async (req, r
 });
 
 // ======================================================
-// REPLICAR SIMULADO (Admin) - Implantação
+// REPLICAR simulado (Admin) - Implantação
 // Regras validadas: (1) evita duplicidade, (2) bloqueia finalizado,
 // (3) bloqueia sem questões, (5) sempre cria novo registro independente
 // ======================================================
@@ -1164,7 +1298,7 @@ app.post("/api/admin/simulados/:id/replicar", requireLogin, requireAdmin, async 
     }
 
     const sim = await db.prepare(`SELECT * FROM simulados WHERE id=?`).get(simuladoId);
-    if (!sim) return res.status(404).json({ ok:false, msg:"Simulado não encontrado" });
+    if (!sim) return res.status(404).json({ ok:false, msg:"avaliação não encontrada" });
 
     // turma diferente
     if (String(sim.turma || "").trim() === novaTurma) {
@@ -1179,7 +1313,7 @@ app.post("/api/admin/simulados/:id/replicar", requireLogin, requireAdmin, async 
     const totalQuestoes = Number(totalRow?.c || 0);
 
     if (totalQuestoes === 0) {
-      return res.status(400).json({ ok:false, msg:"Não é permitido replicar um simulado sem questões." });
+      return res.status(400).json({ ok:false, msg:"Não é permitido replicar uma avaliação sem questões." });
     }
 
     // (1) evitar duplicidade: mesmo ano + turma + unidade + título
@@ -1192,7 +1326,7 @@ app.post("/api/admin/simulados/:id/replicar", requireLogin, requireAdmin, async 
     if (existente) {
       return res.status(400).json({
         ok:false,
-        msg:"Já existe um simulado com o mesmo título e unidade para essa turma no ano atual."
+        msg:"Já existe uma avaliação com o mesmo título e unidade para essa turma no ano atual."
       });
     }
 
@@ -1241,12 +1375,12 @@ app.post("/api/admin/simulados/:id/replicar", requireLogin, requireAdmin, async 
 
   } catch (e) {
     console.error("ERRO replicar simulado:", e);
-    return res.status(500).json({ ok:false, msg:"Erro ao replicar simulado." });
+    return res.status(500).json({ ok:false, msg:"Erro ao replicar avaliação." });
   }
 });
 
 // ======================================================
-// REAPLICAR SIMULADO (Admin)
+// REAPLICAR simulado (Admin)
 // Reabre o mesmo simulado com novo período, mantendo bloqueio
 // para quem já enviou (status = 'enviado').
 // ======================================================
@@ -1269,7 +1403,7 @@ app.post("/api/admin/simulados/:id/reaplicar", requireLogin, async (req, res) =>
     }
 
     const sim = await db.prepare("SELECT * FROM simulados WHERE id=?").get(simuladoId);
-    if (!sim) return res.status(404).json({ ok: false, msg: "Simulado não encontrado." });
+    if (!sim) return res.status(404).json({ ok: false, msg: "avaliação não encontrada." });
 
     await db.prepare(`
       UPDATE simulados
@@ -1281,7 +1415,7 @@ app.post("/api/admin/simulados/:id/reaplicar", requireLogin, async (req, res) =>
     return res.json({ ok: true });
   } catch (e) {
     console.error("ERRO reaplicar simulado:", e);
-    return res.status(500).json({ ok: false, msg: "Erro ao reaplicar simulado." });
+    return res.status(500).json({ ok: false, msg: "Erro ao reaplicar avaliação." });
   }
 });
 
@@ -1302,7 +1436,7 @@ app.get("/api/admin/turmas-ano-atual", requireLogin, requireStaff, async (req, r
   res.json({ ok: true, turmas: rows.map(r => r.serie) });
 });
 // ======================================================
-// SIMULADO (ABRIR) - Detalhe + Questões (Admin/Professor)
+// simulado (ABRIR) - Detalhe + Questões (Admin/Professor)
 // ======================================================
 
 function computeStatus(sim) {
@@ -1321,7 +1455,7 @@ app.get("/api/simulados/:id", requireLogin, requireStaff, async (req, res) => {
   const id = Number(req.params.id);
 
   const sim = await db.prepare(`SELECT * FROM simulados WHERE id=?`).get(id);
-  if (!sim) return res.status(404).json({ ok:false, msg:"Simulado não encontrado" });
+  if (!sim) return res.status(404).json({ ok:false, msg:"avaliação não encontrada" });
 
   const totalRow = await db.prepare(`SELECT COUNT(*) AS c FROM simulado_questoes WHERE simulado_id=?`).get(id);
   const total = Number(totalRow?.c || 0);
@@ -1345,14 +1479,14 @@ app.get("/api/simulados/:id", requireLogin, requireStaff, async (req, res) => {
 });
 
 // Função central: adiciona questão ao simulado com trava e limite
-async function addQuestaoAoSimuladoTx(simuladoId, questaoId, matricula) {
+async function addQuestaoAosimuladoTx(simuladoId, questaoId, matricula) {
   try {
     const tx = db.transaction(async () => {
       const sim = await db.prepare(
         `SELECT id, num_questoes FROM simulados WHERE id=? FOR UPDATE`
       ).get(simuladoId);
       if (!sim) {
-        return { ok:false, status:404, msg:"Simulado não encontrado" };
+        return { ok:false, status:404, msg:"avaliação não encontrada" };
       }
 
       const atualRow = await db.prepare(
@@ -1361,7 +1495,7 @@ async function addQuestaoAoSimuladoTx(simuladoId, questaoId, matricula) {
       const atual = Number(atualRow?.c || 0);
 
       if (atual >= Number(sim.num_questoes || 0)) {
-        return { ok:false, status:409, msg:"Limite de questões atingido neste simulado." };
+        return { ok:false, status:409, msg:"Limite de questões atingido nesta avaliação." };
       }
 
       // evita duplicar
@@ -1370,7 +1504,7 @@ async function addQuestaoAoSimuladoTx(simuladoId, questaoId, matricula) {
       `).get(simuladoId, questaoId);
 
       if (existe) {
-        return { ok:false, status:409, msg:"Esta questão já está no simulado." };
+        return { ok:false, status:409, msg:"Esta questão já está na avaliação." };
       }
 
       // ordem: próxima posição (1..N). A tabela tem ordem NOT NULL.
@@ -1400,7 +1534,7 @@ app.post("/api/simulados/:id/questoes", requireLogin, requireStaff, async (req, 
   const q = await db.prepare(`SELECT id FROM questoes WHERE id=?`).get(questaoId);
   if (!q) return res.status(404).json({ ok:false, msg:"Questão não encontrada" });
 
-  const r = await addQuestaoAoSimuladoTx(simuladoId, questaoId, req.session.user.matricula);
+  const r = await addQuestaoAosimuladoTx(simuladoId, questaoId, req.session.user.matricula);
   if (!r.ok) return res.status(r.status || 400).json({ ok:false, msg:r.msg, detail: r.detail });
 
   audit(req, "simulado.add_questao", { simuladoId, questaoId });
@@ -1422,7 +1556,7 @@ app.post("/api/simulados/:id/questoes/criar", requireLogin, requireStaff, async 
   const simuladoId = Number(req.params.id);
 
   const sim = await db.prepare(`SELECT * FROM simulados WHERE id=?`).get(simuladoId);
-  if (!sim) return res.status(404).json({ ok:false, msg:"Simulado não encontrado" });
+  if (!sim) return res.status(404).json({ ok:false, msg:"avaliação não encontrada" });
 
   const {
     enunciado, alternativa_a, alternativa_b, alternativa_c, alternativa_d, alternativa_e,
@@ -1463,7 +1597,7 @@ app.post("/api/simulados/:id/questoes/criar", requireLogin, requireStaff, async 
 
   const questaoId = info?.id;
 
-  const r = await addQuestaoAoSimuladoTx(simuladoId, questaoId, req.session.user.matricula);
+  const r = await addQuestaoAosimuladoTx(simuladoId, questaoId, req.session.user.matricula);
   if (!r.ok) return res.status(r.status || 400).json({ ok:false, msg:r.msg, detail:r.detail });
 
   audit(req, "simulado.create_questao", { simuladoId, questaoId });
@@ -1562,7 +1696,7 @@ app.post("/api/admin/disciplinas/migrar-global", requireLogin, requireAdmin, asy
 });
 
 // ==========================================================
-// ALUNO — SIMULADOS (implantação)
+// ALUNO — simulados (implantação)
 // Regras:
 // - só aparece no horário agendado (inicio_em <= agora <= fim_em)
 // - questões embaralhadas por tentativa
@@ -1703,14 +1837,14 @@ app.get('/api/aluno/simulados', requireLogin, async (req, res) => {
       const agendado = ini && agora < ini;
       const emAndamento = ini && fim && agora >= ini && agora <= fim;
       const finalizado = fim && agora > fim;
-      const statusSimulado = bloqueado ? "Bloqueado" : (emAndamento ? "Em andamento" : (agendado ? "Agendado" : (finalizado ? "Finalizado" : "Agendado")));
+      const statussimulado = bloqueado ? "Bloqueado" : (emAndamento ? "Em andamento" : (agendado ? "Agendado" : (finalizado ? "Finalizado" : "Agendado")));
       const podeIniciar = !bloqueado && emAndamento;
 
       out.push({
         ...s,
         tentativa: t ? { id: t.id, status: t.status, termina_em: t.termina_em, avisos: t.avisos } : null,
         acao: temAndamento ? 'continuar' : (podeIniciar ? 'iniciar' : 'indisponivel'),
-        status_simulado: statusSimulado,
+        status_simulado: statussimulado,
         pode_iniciar: podeIniciar,
       });
     }
@@ -1718,7 +1852,7 @@ app.get('/api/aluno/simulados', requireLogin, async (req, res) => {
     return res.json({ ok: true, rows: out, turma });
   } catch (e) {
     console.error('ERRO /api/aluno/simulados:', e);
-    return res.status(500).json({ ok: false, msg: 'Erro ao carregar simulados.' });
+    return res.status(500).json({ ok: false, msg: 'Erro ao carregar avaliações.' });
   }
 });
 
@@ -1744,8 +1878,8 @@ app.post('/api/aluno/simulados/:id/iniciar', requireLogin, async (req, res) => {
     if (bloqueado) {
       return res.status(403).json({
         ok: false,
-        error: "SIMULADO_BLOQUEADO",
-        msg: "Você está bloqueado neste simulado. Aguarde liberação do professor."
+        error: "simulado_BLOQUEADO",
+        msg: "Você está bloqueado nesta avaliação. Aguarde liberação do professor."
       });
     }
 
@@ -1760,8 +1894,8 @@ app.post('/api/aluno/simulados/:id/iniciar', requireLogin, async (req, res) => {
     if (jaEnviado) {
       return res.status(409).json({
         ok: false,
-        error: "SIMULADO_JA_CONCLUIDO",
-        msg: "Você já concluiu este simulado e não pode refazer."
+        error: "simulado_JA_CONCLUIDO",
+        msg: "Você já concluiu esta avaliação e não pode refazer."
       });
     }
 
@@ -1794,12 +1928,12 @@ app.post('/api/aluno/simulados/:id/iniciar', requireLogin, async (req, res) => {
     `).get(simuladoId, ano, turma);
 
     if (!simulado) {
-      return res.status(404).json({ ok: false, msg: 'Simulado não encontrado para sua turma.' });
+      return res.status(404).json({ ok: false, msg: 'avaliação não encontrada para sua turma.' });
     }
 
     const agora = nowSql();
     if (!(simulado.inicio_em <= agora && simulado.fim_em >= agora)) {
-      return res.status(400).json({ ok: false, msg: 'Simulado fora do horário agendado.' });
+      return res.status(400).json({ ok: false, msg: 'avaliação fora do horário agendado.' });
     }
 
     // ✅ Se já existe tentativa em andamento e dentro do tempo: continuar
@@ -1829,14 +1963,14 @@ app.post('/api/aluno/simulados/:id/iniciar', requireLogin, async (req, res) => {
     const questoes = questoesRows.map(r => r.questao_id);
 
     if (!questoes.length) {
-      return res.status(400).json({ ok: false, msg: 'Este simulado não possui questões.' });
+      return res.status(400).json({ ok: false, msg: 'Esta avaliação não possui questões.' });
     }
 
     const embaralhadas = shuffleArray(questoes);
     const terminaEm = addMinutes(agora, Number(simulado.duracao_min || 90));
 
     if (!terminaEm) {
-      return res.status(500).json({ ok: false, msg: 'Erro ao calcular tempo do simulado.' });
+      return res.status(500).json({ ok: false, msg: 'Erro ao calcular tempo da avaliação.' });
     }
 
     const info = await insertTentativa(simuladoId, matricula, terminaEm, JSON.stringify(embaralhadas), agora);
@@ -1845,7 +1979,7 @@ app.post('/api/aluno/simulados/:id/iniciar', requireLogin, async (req, res) => {
 
   } catch (e) {
     console.error('ERRO /api/aluno/simulados/:id/iniciar:', e);
-    return res.status(500).json({ ok: false, msg: 'Erro ao iniciar simulado.' });
+    return res.status(500).json({ ok: false, msg: 'Erro ao iniciar avaliação.' });
   }
 });
 
@@ -2198,7 +2332,7 @@ app.get("/api/admin/relatorios/simulados", requireLogin, requireAdminOrProfessor
     res.json({ ok: true, simulados: rows || [] });
   } catch (e) {
     console.error("Erro simulados:", e);
-    res.status(500).json({ ok: false, msg: "Erro ao buscar simulados." });
+    res.status(500).json({ ok: false, msg: "Erro ao buscar avaliações." });
   }
 });
 
@@ -2211,10 +2345,10 @@ app.get("/api/admin/relatorios/simulado/:id", requireLogin, requireAdminOrProfes
     }
 
     const simuladoId = Number(req.params.id || 0);
-    if (!simuladoId) return res.status(400).json({ ok: false, msg: "Simulado inválido." });
+    if (!simuladoId) return res.status(400).json({ ok: false, msg: "avaliação inválida." });
 
     const sim = await db.prepare("SELECT * FROM simulados WHERE id = ?").get(simuladoId);
-    if (!sim) return res.status(404).json({ ok: false, msg: "Simulado não encontrado." });
+    if (!sim) return res.status(404).json({ ok: false, msg: "avaliação não encontrada." });
 
     const ano = Number(sim.ano || anoSistema(req));
     const turma = String(sim.turma || "").trim();
@@ -2303,7 +2437,7 @@ app.get("/api/admin/relatorios/simulado/:id", requireLogin, requireAdminOrProfes
       rows
     });
   } catch (e) {
-    console.error("Relatório simulado (admin/prof) erro:", e);
+    console.error("Relatório avaliação (admin/prof) erro:", e);
     res.status(500).json({ ok: false, msg: "Erro interno (relatório do simulado)." });
   }
 });
@@ -2496,12 +2630,69 @@ app.post("/api/admin/liberacoes/:id/liberar", requireLogin, requireAdminOrProfes
 });
 
 async function start() {
+  if (!process.env.SESSION_SECRET) {
+    if (NODE_ENV === "production") {
+      console.error("SESSION_SECRET é obrigatório em produção.");
+      process.exit(1);
+    }
+    console.warn("Aviso: SESSION_SECRET não definido. Use uma chave forte no .env.");
+  }
+
   await db.init();
   await seed();
-  app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Servidor rodando em:`)
+    console.log(`➡ Local:   http://localhost:${PORT}`)
+    console.log(`➡ Externo: http://177.155.144.130:${PORT}`)
+  });
 }
 
 start().catch((err) => {
   console.error("Falha ao iniciar o servidor:", err);
   process.exit(1);
 });
+
+// Backup automático (opcional)
+function scheduleBackup() {
+  const enabled = String(process.env.BACKUP_ENABLED || "") === "1";
+  if (!enabled) return;
+
+  const hour = Number(process.env.BACKUP_HOUR || 2);
+  const minute = Number(process.env.BACKUP_MINUTE || 0);
+  const runOnStart = String(process.env.BACKUP_ON_START || "") === "1";
+
+  const runBackup = () => {
+    const scriptPath = path.join(__dirname, "scripts", "backup-db.js");
+    const child = spawn(process.execPath, [scriptPath], {
+      stdio: "inherit",
+      env: process.env,
+    });
+    child.on("exit", (code) => {
+      if (code !== 0) {
+        console.error(`Backup automático falhou (code=${code}).`);
+      }
+    });
+  };
+
+  if (runOnStart) {
+    runBackup();
+  }
+
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(hour, minute, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+
+  const delay = next.getTime() - now.getTime();
+  setTimeout(() => {
+    runBackup();
+    setInterval(runBackup, 24 * 60 * 60 * 1000);
+  }, delay);
+}
+
+scheduleBackup();
+
+
+
+

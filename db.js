@@ -180,6 +180,7 @@ async function init() {
   await addColumnSafe("users", "cidade TEXT");
   await addColumnSafe("users", "endereco TEXT");
   await addColumnSafe("users", "telefone TEXT");
+  await addColumnSafe("users", "last_activity TIMESTAMP");
   await addColumnSafe("simulado_questoes", "adicionada_por_matricula TEXT");
   await addColumnSafe("simulado_questoes", "adicionada_em TIMESTAMP");
   await addColumnSafe("questoes", "disciplina_id INTEGER");
@@ -205,6 +206,7 @@ async function init() {
     CREATE INDEX IF NOT EXISTS idx_tentativas_simulado_aluno_status ON tentativas(simulado_id, aluno_matricula, status);
     CREATE INDEX IF NOT EXISTS idx_tentativas_simulado_matricula_status ON tentativas(simulado_id, matricula, status);
     CREATE INDEX IF NOT EXISTS idx_tentativas_bloqueio ON tentativas(simulado_id, aluno_matricula, bloqueado, liberado_em);
+    CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity);
     CREATE INDEX IF NOT EXISTS idx_tentativa_respostas_tentativa ON tentativa_respostas(tentativa_id);
     CREATE INDEX IF NOT EXISTS idx_tentativa_respostas_questao ON tentativa_respostas(questao_id);
   `);

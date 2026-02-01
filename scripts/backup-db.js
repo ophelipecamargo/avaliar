@@ -65,7 +65,8 @@ async function main() {
       process.exit(code || 1);
       return;
     }
-    cleanupOldBackups(backupDir, 5);
+    const keep = Math.max(1, Number(process.env.BACKUP_KEEP || 5));
+    cleanupOldBackups(backupDir, keep);
     process.exit(0);
   });
 }

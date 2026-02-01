@@ -1,0 +1,10 @@
+﻿{
+  "appId": "br.edu.ceep.avaliar",
+  "appName": "Avaliar",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "http://177.155.144.130:3000/login.html",
+    "cleartext": true
+  }
+}

@@ -11,6 +11,7 @@ Auth
 - POST `/api/logout`
 - POST `/api/alterar-senha` body: `{ nova }`
 - POST `/api/password-requests` body: `{ nome, matricula, email, perfil? }`
+- POST `/api/ping` (atualiza last_activity do usuario logado)
 
 Usuarios (admin)
 - GET `/api/admin/users-admin-prof`
@@ -27,6 +28,7 @@ Alunos (admin)
 - PUT `/api/admin/alunos/:matricula` body: `{ nome, serie }`
 - DELETE `/api/admin/alunos/:matricula`
 - GET `/api/admin/turmas-ano-atual`
+- GET `/api/admin/alunos-online` query: `minutes=1..60`
 
 Questoes (admin/prof)
 - GET `/api/questoes` query: `ano, page, limit, search, curso, serie, unidade, disciplina_id, materia`
@@ -38,7 +40,7 @@ Questoes (admin/prof)
 - GET `/api/disciplinas` query: `curso, serie, unidade, ano`
 - POST `/api/disciplinas` body: `{ nome, curso, serie, unidade, ano }`
 
-Simulados (admin/prof)
+Avaliações (admin/prof)
 - GET `/api/admin/simulados`
 - POST `/api/admin/simulados` body: dados do simulado
 - PUT `/api/admin/simulados/:id` body: dados do simulado

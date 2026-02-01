@@ -9,11 +9,12 @@ O AvaliaCEEP e um portal de avaliacoes com tres perfis:
 - Aluno
 
 O sistema permite:
-- Criar simulados, gerenciar questoes e aplicar avaliacoes.
+- Criar avaliacoes, gerenciar questoes e aplicar avaliacoes.
 - Acompanhar resultados e gerar relatorios.
 - Visualizar graficos de desempenho.
 - Controlar liberacoes quando o aluno atinge avisos ou expira a sessao.
 - Operar por ano letivo, com historico preservado.
+- Exibir alunos online/offline para admin e professor.
 
 ## 2) Stack e arquitetura
 - Backend: Node.js + Express
@@ -31,13 +32,13 @@ Estrutura principal:
 ## 3) Perfis e permissoes
 - Admin:
   - Gerencia usuarios (admin/professor/aluno).
-  - Gerencia simulados, questoes, relatorios e liberacoes.
+  - Gerencia avaliacoes, questoes, relatorios e liberacoes.
 - Professor:
-  - Gerencia simulados e questoes.
+  - Gerencia avaliacoes e questoes.
   - Consulta resultados e relatorios.
   - Gerencia liberacoes.
 - Aluno:
-  - Realiza simulados liberados.
+  - Realiza avaliacoes liberadas.
   - Consulta resultado pessoal.
 
 ## 4) Ano letivo e historico
@@ -49,7 +50,7 @@ O sistema funciona por ano letivo. O ano ativo e selecionado no header:
 
 Impacto:
 - `aluno_ano` guarda o vinculo por ano.
-- `simulados`, `questoes` e relatorios usam o ano ativo.
+- `avaliacoes` (simulados), `questoes` e relatorios usam o ano ativo.
 
 ## 5) Requisitos
 - Node.js 18+
@@ -73,6 +74,11 @@ Opcionais:
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
   - Usado para enviar e-mail quando a senha e resetada automaticamente.
   - Para Gmail, use senha de app e `SMTP_HOST=smtp.gmail.com` com `SMTP_PORT=465`.
+- `BACKUP_ENABLED=1` ativa backup automatico (usa `pg_dump`)
+- `BACKUP_HOUR` (0-23) hora do backup diario (padrao 2)
+- `BACKUP_MINUTE` (0-59) minuto do backup diario (padrao 0)
+- `BACKUP_ON_START=1` executa backup ao iniciar o servidor
+- `BACKUP_KEEP` quantidade de backups mantidos (padrao 5)
 
 ## 8) Scripts
 - `npm start`: inicia o servidor.
@@ -81,9 +87,9 @@ Opcionais:
 
 ## 10) Principais paginas (front)
 - `dashboard.html`: atalho para funcoes por perfil.
-- `simulados-criar.html`: gestao de simulados.
-- `simulados-aluno.html`: simulados do aluno.
-- `simulado-realizar.html`: execucao do simulado.
+- `simulados-criar.html`: gestao de avaliacoes.
+- `simulados-aluno.html`: avaliacoes do aluno.
+- `simulado-realizar.html`: execucao da avaliacao.
 - `resultados.html`: relatorios e resultados.
 - `graficos.html`: comparativo e ranking.
 - `liberacoes.html`: liberacoes de tentativas bloqueadas.
@@ -100,6 +106,7 @@ Auth
 - GET `/api/me`
 - POST `/api/logout`
 - POST `/api/alterar-senha`
+- POST `/api/ping`
 
 Ano letivo
 - GET `/api/anos`
@@ -123,6 +130,7 @@ Alunos (admin)
 - PUT `/api/admin/alunos/:matricula`
 - DELETE `/api/admin/alunos/:matricula`
 - GET `/api/admin/turmas-ano-atual`
+- GET `/api/admin/alunos-online`
 
 Questoes (admin/professor)
 - GET `/api/questoes`
@@ -134,7 +142,7 @@ Questoes (admin/professor)
 - GET `/api/disciplinas`
 - POST `/api/disciplinas`
 
-Simulados (admin/professor)
+Avaliações (admin/professor)
 - GET `/api/admin/simulados`
 - POST `/api/admin/simulados`
 - PUT `/api/admin/simulados/:id`
@@ -145,7 +153,7 @@ Simulados (admin/professor)
 - DELETE `/api/simulados/:id/questoes/:questaoId`
 - POST `/api/simulados/:id/questoes/criar`
 
-Aluno - simulados
+Aluno - avaliacoes
 - GET `/api/aluno/simulados`
 - POST `/api/aluno/simulados/:id/iniciar`
 - GET `/api/aluno/tentativas/:id`
@@ -183,6 +191,12 @@ Liberacoes
 - Use `NODE_ENV=production` em ambiente com HTTPS.
 - Mantenha o PostgreSQL com acesso restrito.
 - Controle de acesso por perfil ja aplicado.
+
+## 13.1) App (Capacitor) e modo mobile
+- O app usa a mesma aplicacao web, com ajustes de layout para mobile.
+- A selecao de ano aparece no header e no menu lateral.
+- Acoes em tabelas usam icones e uma legenda no topo da area (mobile/app).
+- A lista de alunos mostra Online/Offline para admin e professor.
 
 ## 14) Hospedagem local com IP fixo (Windows)
 Objetivo: permitir acesso pelo IP publico do servidor da escola.
@@ -263,7 +277,7 @@ Obs.: Este texto nao substitui orientacao juridica.
 ## 19) Manutencao anual (fluxo sugerido)
 1. No inicio do ano, selecione o novo ano no header.
 2. Importe alunos do ano novo (sem migrar automaticamente).
-3. Crie simulados do novo ano.
+3. Crie avaliacoes do novo ano.
 4. O historico do ano anterior fica consultavel.
 
 ## 20) Contato tecnico

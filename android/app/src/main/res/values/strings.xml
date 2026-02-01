@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Avaliar</string>
+    <string name="title_activity_main">Avaliar</string>
+    <string name="package_name">br.edu.ceep.avaliar</string>
+    <string name="custom_url_scheme">br.edu.ceep.avaliar</string>
+</resources>

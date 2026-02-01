@@ -18,6 +18,21 @@ const LOGIN_PAGE = "login.html";
 const PUBLIC_HOME = "index.html";
 const ANO_KEY = "avalia_ano";
 
+function setAppModeClass() {
+  const isNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === "function" && window.Capacitor.isNativePlatform());
+  const isCapProtocol = window.location.protocol === "capacitor:" || window.location.protocol === "ionic:";
+  const isCapUA = /capacitor|cordova|wv/i.test(navigator.userAgent || "");
+  const isSmallViewport = window.matchMedia && window.matchMedia("(max-width: 1024px)").matches;
+  if (isNative || isCapProtocol || isCapUA || (document.body.classList.contains("app") && isSmallViewport)) {
+    document.body.classList.add("is-app");
+  }
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setAppModeClass);
+} else {
+  setAppModeClass();
+}
+
 function getAnoSelecionado() {
   return Number(sessionStorage.getItem(ANO_KEY)) || new Date().getFullYear();
 }
@@ -57,6 +72,98 @@ function fmtDataHoraBr(dtStr){
   const data = fmtDataBr(d);
   const hora = (t || "").slice(0,5);
   return hora ? `${data} ${hora}` : data;
+}
+
+function iconSvg(name) {
+  switch (name) {
+    case "view":
+      return `<svg viewBox="0 0 24 24"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6Z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "edit":
+      return `<svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 6l4 4" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "trash":
+      return `<svg viewBox="0 0 24 24"><path d="M3 6h18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 6V4h8v2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 6l1 14h10l1-14" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "reset":
+      return `<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 4v6h6" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "check":
+      return `<svg viewBox="0 0 24 24"><path d="M5 13l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "close":
+      return `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6l-12 12" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "copy":
+      return `<svg viewBox="0 0 24 24"><path d="M9 9h10v10H9z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 5h10v10H5z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "open":
+      return `<svg viewBox="0 0 24 24"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "add":
+      return `<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "home":
+      return `<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 10v10h14V10" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "users":
+      return `<svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 20a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "requests":
+      return `<svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h6" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "evaluations":
+      return `<svg viewBox="0 0 24 24"><path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 8h6M9 12h6M9 16h4" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "results":
+      return `<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "charts":
+      return `<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V6M16 20v-4M22 20H2" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "releases":
+      return `<svg viewBox="0 0 24 24"><path d="M7 8h10M7 12h10M7 16h6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 4h14v16H5z" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    case "profile":
+      return `<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 20c2-4 14-4 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+    case "students":
+      return `<svg viewBox="0 0 24 24"><path d="M12 4 3 8l9 4 9-4-9-4Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12v5a5 5 0 0 0 10 0v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    default:
+      return "";
+  }
+}
+
+function actionBtn({ label, icon, cls = "", onclick, attrs = "", showText = true }) {
+  const on = onclick ? `onclick="${onclick}"` : "";
+  return `
+    <button class="btn-sm btn-icon ${cls}" ${on} ${attrs} aria-label="${label}" title="${label}">
+      <span class="btn-ico">${iconSvg(icon)}</span>
+      ${showText ? `<span class="btn-text">${label}</span>` : ""}
+    </button>
+  `;
+}
+
+function navLink(label, href, icon) {
+  return `
+    <a href="${href}">
+      <span class="nav-link-icon" aria-hidden="true">${iconSvg(icon)}</span>
+      <span>${label}</span>
+    </a>
+  `;
+}
+
+function renderActionLegend(items, root, anchorSelector, position = "after") {
+  const container = root || document.querySelector(".panel-body") || document.querySelector("main");
+  if (!container || !Array.isArray(items) || !items.length) return;
+  let legend = container.querySelector(".action-legend");
+  if (!legend) {
+    legend = document.createElement("div");
+    legend.className = "action-legend";
+    if (anchorSelector) {
+      const anchor = container.querySelector(anchorSelector);
+      if (anchor && anchor.parentNode) {
+        if (position === "before") {
+          anchor.parentNode.insertBefore(legend, anchor);
+        } else {
+          anchor.parentNode.insertBefore(legend, anchor.nextSibling);
+        }
+      } else {
+        container.insertBefore(legend, container.firstChild);
+      }
+    } else {
+      container.insertBefore(legend, container.firstChild);
+    }
+  }
+  legend.innerHTML = items.map(item => `
+    <span class="legend-item">
+      <span class="legend-ico">${iconSvg(item.icon)}</span>
+      <span>${item.label}</span>
+    </span>
+  `).join("");
 }
 
 // Tabelas responsivas: adiciona data-label nos td com base no thead
@@ -136,6 +243,19 @@ async function api(path, { method = "GET", body, headers } = {}) {
 const SESS_KEY = "avalia_sess"; // sessionStorage
 const PERFIL_OK_KEY = "avalia_perfil_ok";
 
+function applyPerfilClasses(perfil) {
+  document.body.classList.toggle("is-aluno", perfil === "aluno");
+  document.body.classList.toggle("is-professor", perfil === "professor");
+  document.body.classList.toggle("is-admin", perfil === "admin");
+}
+
+function startPing() {
+  if (window._avaliaPingTimer) return;
+  window._avaliaPingTimer = setInterval(() => {
+    api("/api/ping", { method: "POST" }).catch(() => {});
+  }, 60000);
+}
+
 function getPerfilOk() {
   return sessionStorage.getItem(PERFIL_OK_KEY) === "1";
 }
@@ -185,6 +305,8 @@ function clearSessaoCache() {
       : Number(cached.primeiroAcessoTipo || 0),
   };
   setSessaoCache(novo);
+  applyPerfilClasses(novo.perfil);
+  startPing();
   return novo;
 }
 
@@ -217,57 +339,161 @@ function renderHeader(perfil) {
   // "AvaliaCEEP" sempre leva ao menu inicial
   const homeLink = "dashboard.html";
 
+  const isApp = document.body.classList.contains("is-app");
+  const desktopLink = (label, href) => `<a href="${href}">${label}</a>`;
   let links = "";
-    if (perfil === "admin") {
-      links = `
-        <a href="${homeLink}">Início</a>
-        <a href="usuarios-tipos.html">Usuários</a>
-        <a href="solicitacoes-senha.html" class="nav-link-badge">Solicitações
-          <span class="nav-badge" id="solicitacoesNavCount" style="display:none;">0</span>
-        </a>
-        <a href="simulados-criar.html">Simulados</a>
-        <a href="resultados.html">Resultados</a>
-        <a href="graficos.html">Gráficos</a>
-        <a href="liberacoes.html" class="nav-link-badge">Liberações
-          <span class="nav-badge" id="liberacoesNavCount" style="display:none;">0</span>
-        </a>
-          <a href="perfil.html">Perfil</a>
-        <a href="#" onclick="logout()">Sair</a>
-      `;
-    } else if (perfil === "professor") {
-      links = `
-        <a href="${homeLink}">Início</a>
-        <a href="simulados-criar.html">Simulados</a>
-        <a href="resultados.html">Resultados</a>
-        <a href="graficos.html">Gráficos</a>
-        <a href="alunos.html">Alunos</a>
-        <a href="liberacoes.html" class="nav-link-badge">Liberações
-          <span class="nav-badge" id="liberacoesNavCount" style="display:none;">0</span>
-        </a>
-        <a href="perfil.html">Perfil</a>
-        <a href="#" onclick="logout()">Sair</a>
-      `;
+  if (perfil === "admin") {
+    links = isApp ? `
+      ${navLink("Início", homeLink, "home")}
+      ${navLink("Usuários", "usuarios-tipos.html", "users")}
+      <a href="solicitacoes-senha.html" class="nav-link-badge">
+        <span class="nav-link-icon" aria-hidden="true">${iconSvg("requests")}</span>
+        <span>Solicitações</span>
+        <span class="nav-badge" id="solicitacoesNavCount" style="display:none;">0</span>
+      </a>
+      ${navLink("Avaliações", "simulados-criar.html", "evaluations")}
+      ${navLink("Resultados", "resultados.html", "results")}
+      ${navLink("Gráficos", "graficos.html", "charts")}
+      <a href="liberacoes.html" class="nav-link-badge">
+        <span class="nav-link-icon" aria-hidden="true">${iconSvg("releases")}</span>
+        <span>Liberações</span>
+        <span class="nav-badge" id="liberacoesNavCount" style="display:none;">0</span>
+      </a>
+    ` : `
+      ${desktopLink("Início", homeLink)}
+      ${desktopLink("Usuários", "usuarios-tipos.html")}
+      <a href="solicitacoes-senha.html" class="nav-link-badge">Solicitações
+        <span class="nav-badge" id="solicitacoesNavCount" style="display:none;">0</span>
+      </a>
+      ${desktopLink("Avaliações", "simulados-criar.html")}
+      ${desktopLink("Resultados", "resultados.html")}
+      ${desktopLink("Gráficos", "graficos.html")}
+      <a href="liberacoes.html" class="nav-link-badge">Liberações
+        <span class="nav-badge" id="liberacoesNavCount" style="display:none;">0</span>
+      </a>
+      ${desktopLink("Perfil", "perfil.html")}
+    `;
+  } else if (perfil === "professor") {
+    links = isApp ? `
+      ${navLink("Início", homeLink, "home")}
+      ${navLink("Avaliações", "simulados-criar.html", "evaluations")}
+      ${navLink("Resultados", "resultados.html", "results")}
+      ${navLink("Gráficos", "graficos.html", "charts")}
+      ${navLink("Alunos", "alunos.html", "students")}
+      <a href="liberacoes.html" class="nav-link-badge">
+        <span class="nav-link-icon" aria-hidden="true">${iconSvg("releases")}</span>
+        <span>Liberações</span>
+        <span class="nav-badge" id="liberacoesNavCount" style="display:none;">0</span>
+      </a>
+    ` : `
+      ${desktopLink("Início", homeLink)}
+      ${desktopLink("Avaliações", "simulados-criar.html")}
+      ${desktopLink("Resultados", "resultados.html")}
+      ${desktopLink("Gráficos", "graficos.html")}
+      ${desktopLink("Alunos", "alunos.html")}
+      <a href="liberacoes.html" class="nav-link-badge">Liberações
+        <span class="nav-badge" id="liberacoesNavCount" style="display:none;">0</span>
+      </a>
+      ${desktopLink("Perfil", "perfil.html")}
+    `;
   } else {
-    links = `
-      <a href="${homeLink}">Início</a>
-      <a href="simulados-aluno.html">Simulados</a>
-      <a href="resultados.html">Resultados</a>
-        <a href="perfil.html">Perfil</a>
-      <a href="#" onclick="logout()">Sair</a>
+    links = isApp ? `
+      ${navLink("Início", homeLink, "home")}
+      ${navLink("Avaliações", "simulados-aluno.html", "evaluations")}
+      ${navLink("Resultados", "resultados.html", "results")}
+    ` : `
+      ${desktopLink("Início", homeLink)}
+      ${desktopLink("Avaliações", "simulados-aluno.html")}
+      ${desktopLink("Resultados", "resultados.html")}
+      ${desktopLink("Perfil", "perfil.html")}
     `;
   }
 
-  header.innerHTML = `
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-      <a href="${homeLink}" class="brand-link" style="color:#fff;text-decoration:none;font-weight:800;">AvaliaCEEP</a>
-      <span style="opacity:.9;font-size:12px;">
-        Nome: <b>${escapeHtml(s.nome || "-")}</b> | Matrícula: <b>${s.matricula || "-"}</b> | Ano:
-        <select id="anoSelect" class="ano-select"></select>
-        | Perfil: <b>${perfil || "-"}</b>
+  const logoutLink = `
+    <a href="#" class="nav-logout" onclick="logout()">
+      <span class="nav-logout-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M10 17l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M14 4h6v16h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </span>
+      Sair
+    </a>
+  `;
+
+  header.innerHTML = `
+    <div class="header-left">
+      <a href="${homeLink}" class="brand-link">
+        <img src="assets/logo-avaliar.svg" alt="Avaliar">
+        <span class="brand-text">Avaliar</span>
+      </a>
     </div>
-      <nav>${links}</nav>
-    `;
+    <div class="header-right">
+      <button class="nav-logout-top" type="button" aria-label="Sair" onclick="logout()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M10 17l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 12h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M14 4h6v16h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="nav-toggle" type="button" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="header-meta">
+      Ano: <select id="anoSelectHeader" class="ano-select"></select>
+    </div>
+    <div class="nav-backdrop"></div>
+    <nav>
+      ${isApp ? `
+      <div class="nav-sheet-header">
+        <button class="nav-close" type="button" aria-label="Fechar menu">←</button>
+      <div class="nav-sheet-title">Configurações e atividades</div>
+      </div>
+      <div class="nav-sheet-search">
+        <input type="search" class="nav-search-input" placeholder="Pesquisar" aria-label="Pesquisar no menu" />
+      </div>
+      ` : ``}
+      <div class="nav-body">
+        <div class="nav-links">
+          ${links}
+        </div>
+        <div class="nav-footer">
+          ${logoutLink}
+        </div>
+      </div>
+    </nav>
+  `;
+  const nav = header.querySelector("nav");
+  const toggle = header.querySelector(".nav-toggle");
+  const backdrop = header.querySelector(".nav-backdrop");
+  const closeBtn = header.querySelector(".nav-close");
+  const searchInput = header.querySelector(".nav-search-input");
+  const closeNav = () => {
+    nav?.classList.remove("open");
+    backdrop?.classList.remove("open");
+    toggle?.classList.remove("open");
+  };
+  toggle?.addEventListener("click", () => {
+    const isOpen = nav?.classList.toggle("open");
+    backdrop?.classList.toggle("open", !!isOpen);
+    toggle?.classList.toggle("open", !!isOpen);
+  });
+  backdrop?.addEventListener("click", closeNav);
+  closeBtn?.addEventListener("click", closeNav);
+  header.querySelectorAll("nav a").forEach(link => {
+    link.addEventListener("click", closeNav);
+  });
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const term = searchInput.value.trim().toLowerCase();
+      header.querySelectorAll("nav .nav-links a").forEach(a => {
+        const text = (a.textContent || "").toLowerCase();
+        a.style.display = !term || text.includes(term) ? "" : "none";
+      });
+    });
+  }
     if (perfil === "admin" || perfil === "professor") {
       atualizarLiberacoesBadge();
     }
@@ -337,35 +563,42 @@ function renderHeader(perfil) {
   }
 
   async function initAnoSelect(anoLabel) {
-    const sel = document.getElementById("anoSelect");
-    if (!sel) return;
-    sel.disabled = true;
+    const selects = [
+      document.getElementById("anoSelectHeader")
+    ].filter(Boolean);
+    if (!selects.length) return;
+    selects.forEach(sel => { sel.disabled = true; });
     try {
       const r = await api("/api/anos");
       const lista = Array.isArray(r.anos) ? r.anos.map(Number) : [];
       const atual = Number(anoLabel || getAnoSelecionado() || new Date().getFullYear());
       if (!lista.includes(atual)) lista.push(atual);
       const anos = lista.filter(n => Number.isFinite(n)).sort((a, b) => b - a);
-      sel.innerHTML = anos.map(a => `<option value="${a}">${a}</option>`).join("");
-      sel.value = String(atual);
-      sel.disabled = false;
-      sel.addEventListener("change", async () => {
-        const novo = Number(sel.value);
+      const options = anos.map(a => `<option value="${a}">${a}</option>`).join("");
+      selects.forEach(sel => {
+        sel.innerHTML = options;
+        sel.value = String(atual);
+        sel.disabled = false;
+        sel.addEventListener("change", async () => {
+          const novo = Number(sel.value);
         if (!Number.isFinite(novo)) return;
-        sel.disabled = true;
-        try {
-          await api("/api/ano", { method: "PUT", body: { ano: novo } });
-          setAnoSelecionado(novo);
-          window.location.reload();
-        } catch (e) {
-          alert(e.message || "Erro ao alterar o ano.");
-          sel.disabled = false;
-        }
+          selects.forEach(s => { s.disabled = true; });
+          try {
+            await api("/api/ano", { method: "PUT", body: { ano: novo } });
+            setAnoSelecionado(novo);
+            window.location.reload();
+          } catch (e) {
+            alert(e.message || "Erro ao alterar o ano.");
+            selects.forEach(s => { s.disabled = false; });
+          }
+        });
       });
     } catch (e) {
-      sel.innerHTML = `<option value="${anoLabel}">${anoLabel}</option>`;
-      sel.value = String(anoLabel);
-      sel.disabled = false;
+      selects.forEach(sel => {
+        sel.innerHTML = `<option value="${anoLabel}">${anoLabel}</option>`;
+        sel.value = String(anoLabel);
+        sel.disabled = false;
+      });
     }
   }
 
@@ -518,6 +751,32 @@ async function initSolicitacoesSenha() {
   }
 
   renderHeader(s.perfil);
+  renderActionLegend([
+    { label: "Abrir", icon: "open" },
+    { label: "Editar", icon: "edit" },
+    { label: "Replicar", icon: "copy" },
+    { label: "Reaplicar", icon: "reset" },
+    { label: "Excluir", icon: "trash" }
+  ], document.querySelector(".panel-body"), ".alunos-topbar", "before");
+  renderActionLegend([
+    { label: "Liberar", icon: "check" }
+  ]);
+  renderActionLegend([
+    { label: "Editar", icon: "edit" },
+    { label: "Excluir", icon: "trash" }
+  ]);
+  renderActionLegend([
+    { label: "Abrir", icon: "open" },
+    { label: "Editar", icon: "edit" },
+    { label: "Replicar", icon: "copy" },
+    { label: "Reaplicar", icon: "reset" },
+    { label: "Excluir", icon: "trash" }
+  ]);
+  renderActionLegend([
+    { label: "Resetar", icon: "reset" },
+    { label: "Concluir", icon: "check" },
+    { label: "Recusar", icon: "close" }
+  ]);
 
   const statusSel = $("filtroStatus");
   const tbody = document.querySelector("#tabelaSolicitacoes tbody");
@@ -548,9 +807,9 @@ async function initSolicitacoesSenha() {
         const btns = (r.status === "pendente")
           ? `
               <div class="acoes-cell">
-                <button class="btn-sm" onclick="resolverSolicitacaoSenha(${r.id}, 'reset')">Resetar</button>
-                <button class="btn-sm" onclick="resolverSolicitacaoSenha(${r.id}, 'resolver')">Concluir</button>
-                <button class="btn-sm" onclick="resolverSolicitacaoSenha(${r.id}, 'recusar')">Recusar</button>
+                ${actionBtn({ label: "Resetar", icon: "reset", cls: "btn-warn", onclick: `resolverSolicitacaoSenha(${r.id}, 'reset')` })}
+                ${actionBtn({ label: "Concluir", icon: "check", cls: "btn-success", onclick: `resolverSolicitacaoSenha(${r.id}, 'resolver')` })}
+                ${actionBtn({ label: "Recusar", icon: "close", cls: "btn-danger", onclick: `resolverSolicitacaoSenha(${r.id}, 'recusar')` })}
               </div>
             `
           : "-";
@@ -724,7 +983,7 @@ async function initDashboard() {
             <path d="M9 8h6M9 12h6M9 16h4" />
           </svg>
         </div>
-        <div class="card-title">Simulados</div>
+        <div class="card-title">Avaliações</div>
         <div class="card-desc">Criar e organizar avaliações</div>
       </div>
         <div class="card card--tone-3" onclick="window.location.href='resultados.html'">
@@ -789,7 +1048,7 @@ async function initDashboard() {
             <path d="M9 8h6M9 12h6M9 16h4" />
           </svg>
         </div>
-        <div class="card-title">Simulados</div>
+        <div class="card-title">Avaliações</div>
         <div class="card-desc">Acessar avaliações disponíveis</div>
       </div>
       <div class="card card--tone-2" onclick="window.location.href='resultados.html'">
@@ -880,7 +1139,67 @@ async function initDashboard() {
     if (s.perfil === "admin" || s.perfil === "professor") {
       await atualizarLiberacoesBadge();
     }
+    if (s.perfil === "admin" || s.perfil === "professor") {
+      await renderOnlineAlunos();
+      startOnlineAlunosRefresh();
+    }
   }
+
+async function renderOnlineAlunos() {
+  const card = $("onlineAlunosCard");
+  if (!card) return;
+  try {
+    const [r, all] = await Promise.all([
+      api("/api/admin/alunos-online?minutes=5"),
+      api("/api/admin/alunos-ano-atual")
+    ]);
+    const rows = Array.isArray(r.rows) ? r.rows : [];
+    const totalAlunos = Array.isArray(all.rows) ? all.rows.length : 0;
+    const offline = Math.max(0, totalAlunos - rows.length);
+    if (!rows.length) {
+      card.innerHTML = `
+        <div class="online-card-head">
+          <div>
+            <div class="online-card-title">Alunos online</div>
+            <div class="online-card-sub">Online: ${rows.length} | Offline: ${offline}</div>
+          </div>
+          <div class="online-count">0</div>
+        </div>
+        <div class="online-empty">Nenhum aluno online no momento.</div>
+      `;
+      card.style.display = "block";
+      return;
+    }
+    const list = rows.map(row => `
+      <div class="online-item">
+        <span class="status-dot status-dot--on" aria-hidden="true"></span>
+        <div class="online-name">${escapeHtml(row.nome || "-")}</div>
+        <div class="online-serie">${escapeHtml(row.serie || "-")}</div>
+        <div class="online-time">${fmtDataHoraBr(row.last_activity)}</div>
+      </div>
+    `).join("");
+    card.innerHTML = `
+      <div class="online-card-head">
+        <div>
+          <div class="online-card-title">Alunos online</div>
+          <div class="online-card-sub">Online: ${rows.length} | Offline: ${offline}</div>
+        </div>
+        <div class="online-count">${rows.length}</div>
+      </div>
+      <div class="online-list">${list}</div>
+    `;
+    card.style.display = "block";
+  } catch (_) {
+    card.style.display = "none";
+  }
+}
+
+function startOnlineAlunosRefresh() {
+  if (window._avaliaOnlineTimer) return;
+  window._avaliaOnlineTimer = setInterval(() => {
+    renderOnlineAlunos();
+  }, 30000);
+}
 
   async function initPerfilForm(sess) {
     const card = $("perfilCard");
@@ -1070,6 +1389,11 @@ async function initUsuarios() {
   }
 
   renderHeader(s.perfil);
+  renderActionLegend([
+    { label: "Editar", icon: "edit" },
+    { label: "Resetar senha", icon: "reset" },
+    { label: "Remover", icon: "trash" }
+  ]);
 
   const tbody = document.querySelector("#tabelaUsuarios tbody");
   if (!tbody) return;
@@ -1153,9 +1477,11 @@ async function initUsuarios() {
         <td>${u.perfil}</td>
         <td>${u.primeiro_acesso ? "Sim" : "Não"}</td>
         <td>
-          <button class="btn-sm" onclick="editarUsuario('${u.matricula}')">Editar</button>
-          <button class="btn-sm" onclick="resetarSenha('${u.matricula}')">Resetar senha</button>
-          <button class="btn-sm" onclick="removerUsuario('${u.matricula}')">Remover</button>
+          <div class="acoes-cell">
+            ${actionBtn({ label: "Editar", icon: "edit", cls: "btn-neutral", onclick: `editarUsuario('${u.matricula}')` })}
+            ${actionBtn({ label: "Resetar senha", icon: "reset", cls: "btn-warn", onclick: `resetarSenha('${u.matricula}')` })}
+            ${actionBtn({ label: "Remover", icon: "trash", cls: "btn-danger", onclick: `removerUsuario('${u.matricula}')` })}
+          </div>
         </td>
       `;
       tbody.appendChild(tr);
@@ -1308,6 +1634,12 @@ async function initAlunos() {
   }
 
   renderHeader(s.perfil);
+  renderActionLegend([
+    { label: "Ver perfil", icon: "view" },
+    { label: "Editar", icon: "edit" },
+    { label: "Resetar senha", icon: "reset" },
+    { label: "Remover", icon: "trash" }
+  ]);
 
   const ano = anoAtual();
 
@@ -1323,6 +1655,7 @@ async function initAlunos() {
   let pagina = 1;
   let porPagina = Number(document.getElementById("selectPorPagina")?.value || 20);
   let termoBusca = "";
+  let onlineMap = new Map();
 
   function normalizar(str) {
     return String(str || "")
@@ -1332,8 +1665,15 @@ async function initAlunos() {
   }
 
   async function carregarAlunosDaApi() {
-    const r = await api("/api/admin/alunos-ano-atual");
+    const [r, online] = await Promise.all([
+      api("/api/admin/alunos-ano-atual"),
+      api("/api/admin/alunos-online?minutes=5").catch(() => ({ rows: [] }))
+    ]);
     alunosCache = r.rows || [];
+    onlineMap = new Map();
+    (online.rows || []).forEach(o => {
+      onlineMap.set(String(o.matricula), o);
+    });
     aplicarFiltro(); // já recalcula filtrados e renderiza
   }
 
@@ -1394,11 +1734,13 @@ async function initAlunos() {
     const paginaItens = alunosFiltrados.slice(inicio, fim);
 
     paginaItens.forEach(a => {
+      const online = onlineMap.get(String(a.matricula));
+      const status = online ? "Online" : "Offline";
       const tr = document.createElement("tr");
       const acoesExtras = podeEditar ? `
-          <button class="btn-sm" onclick="editarAluno('${a.matricula}')">Editar</button>
-          <button class="btn-sm" onclick="resetarSenhaAluno('${a.matricula}')">Resetar senha</button>
-          <button class="btn-sm" onclick="removerAluno('${a.matricula}')">Remover</button>
+          ${actionBtn({ label: "Editar", icon: "edit", cls: "btn-neutral", onclick: `editarAluno('${a.matricula}')` })}
+          ${actionBtn({ label: "Resetar senha", icon: "reset", cls: "btn-warn", onclick: `resetarSenhaAluno('${a.matricula}')` })}
+          ${actionBtn({ label: "Remover", icon: "trash", cls: "btn-danger", onclick: `removerAluno('${a.matricula}')` })}
         ` : "";
       tr.innerHTML = `
         <td>${a.matricula}</td>
@@ -1406,8 +1748,14 @@ async function initAlunos() {
         <td>${a.serie}</td>
         <td>${a.ano}</td>
         <td>
-          <button class="btn-sm" onclick="verPerfilAluno('${a.matricula}')">Ver perfil</button>
-          ${acoesExtras}
+          <span class="status-dot ${online ? "status-dot--on" : "status-dot--off"}"></span>
+          <span class="status-text">${status}</span>
+        </td>
+        <td>
+          <div class="acoes-cell">
+            ${actionBtn({ label: "Ver perfil", icon: "view", cls: "btn-neutral", onclick: `verPerfilAluno('${a.matricula}')` })}
+            ${acoesExtras}
+          </div>
         </td>
       `;
       tbody.appendChild(tr);
@@ -1807,7 +2155,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const nota = Number(r.nota ?? 0).toFixed(1).replace(".", ",");
           return `
             <tr>
-              <td data-label="Simulado">${escapeHtml(r.titulo)}</td>
+              <td data-label="Avaliação">${escapeHtml(r.titulo)}</td>
               <td data-label="Unidade">${escapeHtml(r.unidade)}</td>
               <td data-label="Data realizada">${escapeHtml(dt)}</td>
               <td data-label="Acertos">${escapeHtml(ac)}/${escapeHtml(tot)}</td>
@@ -2139,7 +2487,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (resumo){
         resumo.style.display = "flex";
         resumo.innerHTML = `
-          <div class="pill">Simulado: <b>${escapeHtml(sim.titulo || "-")}</b></div>
+          <div class="pill">Avaliação: <b>${escapeHtml(sim.titulo || "-")}</b></div>
           <div class="pill">Turma: <b>${escapeHtml(sim.turma || "-")}</b></div>
           <div class="pill">Realizaram: <b>${escapeHtml(realizaram)}</b></div>
           <div class="pill">Não realizaram: <b>${escapeHtml(naoRealizaram)}</b></div>
@@ -2390,7 +2738,7 @@ async function initSimuladosAluno(){
           const tentativaId = r.tentativa?.id || "";
           return `
             <tr>
-              <td data-label="Simulado">${escapeHtml(r.titulo)}</td>
+              <td data-label="Avaliação">${escapeHtml(r.titulo)}</td>
               <td data-label="Unidade">${escapeHtml(r.unidade)}</td>
               <td data-label="Início">${escapeHtml(fmtDataHoraBr(r.inicio_em))}</td>
               <td data-label="Fim">${escapeHtml(fmtDataHoraBr(r.fim_em))}</td>
@@ -2486,7 +2834,7 @@ async function initSimuladosAluno(){
           finalizarTela(r.tentativa || r.tentativa?.tentativa || r.tentativa);
           if (!avisoEncerrado) {
             avisoEncerrado = true;
-            alert("Simulado encerrado por 3 avisos.");
+            alert("Avaliação encerrado por 3 avisos.");
           }
           return;
         }
@@ -2557,7 +2905,7 @@ async function initSimuladosAluno(){
         return null;
       }
       total = t.total;
-      if (elTitulo) elTitulo.textContent = t.titulo || "Simulado";
+      if (elTitulo) elTitulo.textContent = t.titulo || "Avaliação";
       if (elUnidade) elUnidade.textContent = t.unidade || "";
       if (elAvisos) elAvisos.textContent = `Avisos: ${t.avisos}/3`;
       setProgresso();
@@ -2613,8 +2961,8 @@ async function initSimuladosAluno(){
         box.innerHTML = `
           <div class="sim-final-card">
             <div class="sim-final-head">
-              <div class="sim-final-title">Resultado do Simulado</div>
-              <div class="sim-final-sub">Simulado: <b>${escapeHtml(document.getElementById("simTitulo")?.textContent || "-")}</b></div>
+              <div class="sim-final-title">Resultado da avaliação</div>
+              <div class="sim-final-sub">Avaliação: <b>${escapeHtml(document.getElementById("simTitulo")?.textContent || "-")}</b></div>
               <div class="sim-final-sub">Aluno: <b>${escapeHtml(sess.nome || "-")}</b></div>
               <div class="sim-final-status">Status: <b>${escapeHtml(status || "-")}</b></div>
             </div>
@@ -3077,8 +3425,10 @@ async function salvarQuestaoModal(){
         <td data-label="Matéria">${q.disciplina_nome || q.materia || ""}</td>
         <td data-label="Cadastrada por">${escapeHtml(q.professor_nome || q.criada_por_matricula || "-")}</td>
         <td>
-          <button class="btn-sm" onclick="editarQuestao(${q.id})">Editar</button>
-          <button class="btn-sm" onclick="excluirQuestao(${q.id})">Excluir</button>
+          <div class="acoes-cell">
+            ${actionBtn({ label: "Editar", icon: "edit", cls: "btn-neutral", onclick: `editarQuestao(${q.id})` })}
+            ${actionBtn({ label: "Excluir", icon: "trash", cls: "btn-danger", onclick: `excluirQuestao(${q.id})` })}
+          </div>
         </td>
       `;
       tbody.appendChild(tr);
@@ -3201,12 +3551,12 @@ async function initLiberacoes(){
         <tr>
           <td data-label="Aluno">${escapeHtml(x.aluno_nome || "-")}</td>
           <td data-label="Matricula">${escapeHtml(x.aluno_matricula || "-")}</td>
-          <td data-label="Simulado">${escapeHtml(x.titulo || "-")}</td>
+          <td data-label="Avaliação">${escapeHtml(x.titulo || "-")}</td>
           <td data-label="Turma">${escapeHtml(x.turma || "-")}</td>
           <td data-label="Motivo">${escapeHtml(motivoLabel(x.bloqueado_motivo))}</td>
           <td data-label="Bloqueado em">${escapeHtml(fmtDataHoraBr(x.bloqueado_em))}</td>
           <td data-label="Acoes">
-            <button class="btn-sm" data-id="${x.id}">Liberar</button>
+            ${actionBtn({ label: "Liberar", icon: "check", cls: "btn-success", attrs: `data-id="${x.id}"` })}
           </td>
         </tr>
       `).join("");
@@ -3380,6 +3730,13 @@ async function initSimulados(){
   }
 
   renderHeader(s.perfil);
+  renderActionLegend([
+    { label: "Abrir", icon: "open" },
+    { label: "Editar", icon: "edit" },
+    { label: "Replicar", icon: "copy" },
+    { label: "Reaplicar", icon: "reset" },
+    { label: "Excluir", icon: "trash" }
+  ], document.querySelector(".panel-body"), ".alunos-topbar", "before");
 
   const tbody = document.querySelector("#tabelaSimulados tbody");
   if (!tbody) return;
@@ -3404,7 +3761,7 @@ async function initSimulados(){
           <div id="replicarErro" style="display:none; padding:10px; border-radius:10px; background:#FEE2E2; border:1px solid #FCA5A5; color:#991B1B; font-weight:800; margin-bottom:12px;"></div>
 
           <div style="padding:10px; border-radius:10px; background:#EEF2FF; border:1px solid #D6E0FF; margin-bottom:12px;">
-            <div><b>Simulado:</b> <span id="replicarTitulo"></span></div>
+            <div><b>Avaliação:</b> <span id="replicarTitulo"></span></div>
             <div><b>Turma atual:</b> <span id="replicarTurmaAtual"></span></div>
           </div>
 
@@ -3566,7 +3923,7 @@ async function initSimulados(){
     bd.innerHTML = `
       <div class="modal" style="max-width:900px;">
         <div class="modal-header">
-          <span id="tituloModalSimulado">Novo Simulado</span>
+          <span id="tituloModalSimulado">Novo Avaliação</span>
           <button class="btn-sm" id="fecharModalSimuladoBtn" type="button">X</button>
         </div>
 
@@ -3574,7 +3931,7 @@ async function initSimulados(){
           <div class="form-grid">
             <div class="field" style="grid-column:1/-1;">
               <label>Título</label>
-              <input id="sTitulo" placeholder="Ex: Simulado 1 - Redes" />
+              <input id="sTitulo" placeholder="Ex: Avaliação 1 - Redes" />
             </div>
 
             <div class="field">
@@ -3592,7 +3949,7 @@ async function initSimulados(){
               <select id="sCurso">
                 <option value="">Selecione...</option>
                 <option value="AGRONEGOCIO">AGRONEGOCIO</option>
-                <option value="AGROPECURA">AGROPECURA</option>
+                <option value="AGROPECUARIA">AGROPECUARIA</option>
                 <option value="AGROECOLOGIA">AGROECOLOGIA</option>
                 <option value="ADMINISTRAÇÃO">ADMINISTRAÇÃO</option>
                 <option value="INFORMATICA">INFORMATICA</option>
@@ -3810,10 +4167,10 @@ function dataHoraFormat(inicio_em, fim_em){
       const { data, horario } = dataHoraFormat(sm.inicio_em, sm.fim_em);
       const status = statusDoSimulado(sm.inicio_em, sm.fim_em);
       const podeAdmin = s.perfil === "admin";
-      const btnReplicar = podeAdmin ? `<button class="btn-sm btn-acao" onclick="replicarSimulado(${sm.id})">Replicar</button>` : "";
-      const btnReaplicar = (podeAdmin || s.perfil === "professor") ? `<button class="btn-sm btn-acao btn-reaplicar" onclick="reaplicarSimulado(${sm.id})">Reaplicar</button>` : "";
-      const btnEditar = podeAdmin ? `<button class="btn-sm btn-acao" onclick="editarSimulado(${sm.id})">Editar</button>` : "";
-      const btnExcluir = podeAdmin ? `<button class="btn-sm btn-acao btn-excluir" onclick="excluirSimulado(${sm.id})">Excluir</button>` : "";
+      const btnReplicar = podeAdmin ? actionBtn({ label: "Replicar", icon: "copy", cls: "btn-neutral btn-acao", onclick: `replicarSimulado(${sm.id})` }) : "";
+      const btnReaplicar = (podeAdmin || s.perfil === "professor") ? actionBtn({ label: "Reaplicar", icon: "reset", cls: "btn-warn btn-acao btn-reaplicar", onclick: `reaplicarSimulado(${sm.id})` }) : "";
+      const btnEditar = podeAdmin ? actionBtn({ label: "Editar", icon: "edit", cls: "btn-neutral btn-acao", onclick: `editarSimulado(${sm.id})` }) : "";
+      const btnExcluir = podeAdmin ? actionBtn({ label: "Excluir", icon: "trash", cls: "btn-danger btn-acao btn-excluir", onclick: `excluirSimulado(${sm.id})` }) : "";
 
       const tabelaSim = document.getElementById("tabelaSimulados");
       if (tabelaSim) tabelaSim.classList.add("table-mobile");
@@ -3828,7 +4185,7 @@ function dataHoraFormat(inicio_em, fim_em){
       <td data-label="Questões">${sm.num_questoes ?? ""}</td>
       <td data-label="Nota">${sm.valor_total ?? ""}</td>
 <td class="acoes-cell">
-  <button class="btn-sm btn-acao" onclick="abrirSimulado(${sm.id})">Abrir</button>
+  ${actionBtn({ label: "Abrir", icon: "open", cls: "btn-success btn-acao", onclick: `abrirSimulado(${sm.id})` })}
   ${btnEditar}
   ${btnReplicar}
   ${btnReaplicar}
@@ -3890,7 +4247,7 @@ function dataHoraFormat(inicio_em, fim_em){
           <div id="repMsgErro" class="alert-erro" style="display:none; margin-bottom:12px;"></div>
 
           <div class="box-info" style="margin-bottom:12px;">
-            <div><b>Simulado:</b> <span id="repSimTitulo">-</span></div>
+            <div><b>Avaliação:</b> <span id="repSimTitulo">-</span></div>
             <div><b>Turma atual:</b> <span id="repTurmaAtual">-</span></div>
           </div>
 
@@ -3933,7 +4290,7 @@ function dataHoraFormat(inicio_em, fim_em){
         fechar();
         page = 1;
         await carregar();
-        alert("Simulado replicado com sucesso!");
+        alert("Avaliação replicado com sucesso!");
       } catch (e) {
         mostrarErroReplicar(e.message || "Erro ao replicar simulado.");
       }
@@ -3951,7 +4308,7 @@ function dataHoraFormat(inicio_em, fim_em){
     garantirModalReplicar();
 
     const sm = simuladosCache.find(x => Number(x.id) === Number(id));
-    if (!sm) return alert("Simulado não encontrado.");
+    if (!sm) return alert("Avaliação não encontrado.");
 
     repSimId = Number(id);
 
@@ -4039,7 +4396,7 @@ function dataHoraFormat(inicio_em, fim_em){
           <div id="reapMsgErro" class="alert-erro" style="display:none; margin-bottom:12px;"></div>
 
           <div class="box-info" style="margin-bottom:12px;">
-            <div><b>Simulado:</b> <span id="reapSimTitulo">-</span></div>
+            <div><b>Avaliação:</b> <span id="reapSimTitulo">-</span></div>
             <div><b>Turma:</b> <span id="reapTurmaAtual">-</span></div>
             <div style="opacity:.85;margin-top:6px;">Reabre apenas para quem <b>não realizou</b>.</div>
           </div>
@@ -4084,7 +4441,7 @@ function dataHoraFormat(inicio_em, fim_em){
         });
         fechar();
         await carregar();
-        alert("Simulado reaplicado com sucesso!");
+        alert("Avaliação reaplicado com sucesso!");
       } catch (e) {
         mostrarErroReaplicar(e.message || "Erro ao reaplicar simulado.");
       }
@@ -4102,7 +4459,7 @@ function dataHoraFormat(inicio_em, fim_em){
     garantirModalReaplicar();
 
     const sm = simuladosCache.find(x => Number(x.id) === Number(id));
-    if (!sm) return alert("Simulado não encontrado.");
+    if (!sm) return alert("Avaliação não encontrado.");
 
     reapSimId = Number(id);
     reapDuracaoMin = Number(sm.duracao_min || 90);
@@ -4138,10 +4495,10 @@ window.reaplicarSimulado = (id) => {
     if (s.perfil !== "admin") return alert("Somente ADMIN pode editar simulados.");
 
     const sm = simuladosCache.find(x => Number(x.id) === Number(id));
-    if (!sm) return alert("Simulado não encontrado.");
+    if (!sm) return alert("Avaliação não encontrado.");
 
     editSimuladoId = Number(id);
-    await abrirModalSimulado("Editar Simulado");
+    await abrirModalSimulado("Editar Avaliação");
 
     preencherSimuladoForm({
       titulo: sm.titulo,
@@ -4175,7 +4532,7 @@ window.reaplicarSimulado = (id) => {
     }
 
     editSimuladoId = null;
-    await abrirModalSimulado("Novo Simulado");
+    await abrirModalSimulado("Novo Avaliação");
 
     preencherSimuladoForm({
       titulo: "",
@@ -4224,11 +4581,16 @@ window.initSimuladoDetalhe = async function () {
   const s = await ensureSession({ redirect: true });
   if (!s) return;
   renderHeader(s.perfil);
+  renderActionLegend([
+    { label: "Adicionar", icon: "add" },
+    { label: "Editar", icon: "edit" },
+    { label: "Excluir", icon: "trash" }
+  ], document.querySelector(".panel-body"), ".toolbar");
 
   const params = new URLSearchParams(window.location.search);
   const simuladoId = Number(params.get("id"));
   if (!simuladoId) {
-    alert("Simulado inválido.");
+    alert("Avaliação inválido.");
     return;
   }
   let ctxAtual = null;
@@ -4343,9 +4705,9 @@ await carregarDisciplinas(ctx);
         <td data-label="Matéria">${escapeHtml(q.disciplina_nome || q.materia || "")}</td>
         <td data-label="Cadastrada por">${escapeHtml(q.professor_nome || q.criada_por_matricula || "-")}</td>
         <td>
-          <button class="btn-sm" data-acao="ver" data-qid="${q.id}">Ver</button>
-          <button class="btn-sm" data-acao="editar" data-qid="${q.id}">Editar</button>
-          <button class="btn-sm" data-acao="remover" data-qid="${q.id}">Remover</button>
+          ${actionBtn({ label: "Ver", icon: "view", cls: "btn-neutral", attrs: `data-acao="ver" data-qid="${q.id}"` })}
+          ${actionBtn({ label: "Editar", icon: "edit", cls: "btn-neutral", attrs: `data-acao="editar" data-qid="${q.id}"` })}
+          ${actionBtn({ label: "Remover", icon: "trash", cls: "btn-danger", attrs: `data-acao="remover" data-qid="${q.id}"` })}
         </td>
       `;
       tbody.appendChild(tr);
@@ -4544,7 +4906,7 @@ await carregarDisciplinas(ctx);
   const btnNovaDisc = document.getElementById("btnNovaDisciplina");
 if (btnNovaDisc) {
   btnNovaDisc.onclick = async () => {
-    if (!simuladoAtual) return alert("Simulado ainda não carregou.");
+    if (!simuladoAtual) return alert("Avaliação ainda não carregou.");
   
     await cadastrarDisciplina(ctx);
   };
@@ -4560,7 +4922,7 @@ if (btnNovaDisc) {
   // Salvar questão (com upload opcional)
   async function salvarQuestaoDoModal() {
     if (!simuladoAtual) {
-      alert("Simulado ainda não carregou.");
+      alert("Avaliação ainda não carregou.");
       return;
     }
 
@@ -4779,9 +5141,9 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
             <td data-label="Disciplina">${escapeHtml(q.disciplina_nome || q.materia || "")}</td>
             <td data-label="Cadastrada por">${escapeHtml(q.professor_nome || q.criada_por_matricula || "-")}</td>
             <td data-label="Ações" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-              <button class="btn-sm" data-add="${q.id}">Adicionar</button>
-              <button class="btn-sm" data-edit="${q.id}">Editar</button>
-              <button class="btn-sm" data-del="${q.id}">Excluir</button>
+              ${actionBtn({ label: "Adicionar", icon: "add", cls: "btn-success", attrs: `data-add="${q.id}"` })}
+              ${actionBtn({ label: "Editar", icon: "edit", cls: "btn-neutral", attrs: `data-edit="${q.id}"` })}
+              ${actionBtn({ label: "Excluir", icon: "trash", cls: "btn-danger", attrs: `data-del="${q.id}"` })}
             </td>
           </tr>
         `).join("");
@@ -4966,7 +5328,7 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
 
   // botão "Adicionar do banco" agora abre o modal com lista filtrada
   btnBanco.addEventListener("click", async () => {
-    if (!simuladoAtual) return alert("Simulado ainda não carregou.");
+    if (!simuladoAtual) return alert("Avaliação ainda não carregou.");
 
     const ctx = {
       curso: simuladoAtual.curso,
@@ -5002,7 +5364,7 @@ function fecharBQModal() { modalBQ.classList.remove("show"); }
 document.getElementById('btnNovaDisciplina').onclick = async () => {
   try {
     if (!simuladoAtual) {
-      alert("Simulado ainda não carregou.");
+      alert("Avaliação ainda não carregou.");
       return;
     }
 
@@ -5116,3 +5478,4 @@ async function cadastrarDisciplina(ctx){
 
   await carregar();
 };
+
